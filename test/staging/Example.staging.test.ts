@@ -5,11 +5,11 @@ import { assert, expect } from "chai";
 import { developmentChains } from "../../utils/helper.config";
 
 const isDevelopmentChain = developmentChains.includes(network.name);
-console.log("unit test");
+console.log("Staging test");
 
 isDevelopmentChain
 	? describe.skip
-	: describe("Example Staging Tests", () => {
+	: describe("StableCoin Staging Tests", () => {
 			beforeEach(async () => {
 				// ! Do some code here
 			});
@@ -19,4 +19,4 @@ isDevelopmentChain
 					assert.equal(1, 1);
 				});
 			});
-	  });
+		});
