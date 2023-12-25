@@ -6,14 +6,15 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 	const { deployer } = await getNamedAccounts();
 	const { deploy, log } = deployments;
 
-	const stableCoin = await deploy("StableCoin", {
+	const charityStableCoin = await deploy("CharityStableCoin", {
 		from: deployer,
 		args: [], // ! constructor args
 		log: true,
 	});
 
-	log(`StableCoin contract: `, stableCoin.address);
+	log(`CharityStableCoin contract: `, charityStableCoin.address);
 };
+
 export default func;
-func.id = "deploy_stableCoin"; // id required to prevent re-execution
-func.tags = ["stableCoin", "all"];
+func.id = "deploy_charityStableCoin"; // id required to prevent re-execution
+func.tags = ["charityStableCoin", "all"];
