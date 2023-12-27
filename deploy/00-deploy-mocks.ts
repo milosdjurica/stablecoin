@@ -9,7 +9,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
 	const DECIMALS = 8;
 	const ETH_USD_PRICE = 2000e8;
-	const BTC_USD_PRICE = 20000e8;
 
 	if (developmentChains.includes(network.name)) {
 		console.log("Local network detected! Deploying mocks...");
@@ -19,16 +18,9 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 			args: [DECIMALS, ETH_USD_PRICE],
 			log: true,
 		});
+
 		log(`EthMock contract: `, ethMock.address);
-
-		const btcMock = await deploy("MockV3Aggregator", {
-			from: deployer,
-			args: [DECIMALS, BTC_USD_PRICE],
-			log: true,
-		});
-		log(`BtcMock contract: `, btcMock.address);
-
-		log("Mocks deployed!!!");
+		log("ETH price feed mock deployed!!!");
 		log("===============================================================");
 	}
 };

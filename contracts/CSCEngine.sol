@@ -25,9 +25,8 @@ contract CSCEngine {
     ////////////////////
     CharityStableCoin private immutable i_csc;
 
-    mapping(address token => address priceFeed) private s_priceFeeds;
-
-    address[] private s_collateralDeposited;
+    address private immutable i_collateralAddress;
+    address private immutable i_priceFeed;
 
     ////////////////////
     // * Events 	  //
@@ -44,15 +43,9 @@ contract CSCEngine {
     ////////////////////
     // * Constructor  //
     ////////////////////
-    constructor(address[] memory tokenAddresses, address[] memory priceFeedAddresses, address cscAddress) {
-        if (tokenAddresses.length != priceFeedAddresses.length) {
-            revert CSCEngine__TokenAddressesAndPriceFeedAddressesMustBeSameLength();
-        }
-
-        for (uint256 i = 0; i < tokenAddresses.length; i++) {
-            s_priceFeeds[tokenAddresses[i]] = priceFeedAddresses[i];
-            s_collateralDeposited.push(tokenAddresses[i]);
-        }
+    constructor(address tokenAddress, address priceFeedAddress, address cscAddress) {
+        i_collateralAddress = tokenAddress;
+        i_priceFeed = priceFeedAddress;
         i_csc = CharityStableCoin(cscAddress);
     }
 
