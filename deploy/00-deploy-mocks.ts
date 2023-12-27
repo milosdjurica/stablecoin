@@ -13,13 +13,21 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 	if (developmentChains.includes(network.name)) {
 		console.log("Local network detected! Deploying mocks...");
 
-		const ethMock = await deploy("MockV3Aggregator", {
+		const erc20Mock = await deploy("ERC20Mock", {
+			from: deployer,
+			args: [],
+			log: true,
+		});
+
+		const ethPriceFeedMock = await deploy("MockV3Aggregator", {
 			from: deployer,
 			args: [DECIMALS, ETH_USD_PRICE],
 			log: true,
 		});
 
-		log(`EthMock contract: `, ethMock.address);
+		log("erc20Mock contract: ", erc20Mock.address);
+		log("erc20Mock deployed!!!");
+		log(`EthPriceFeedMock contract: `, ethPriceFeedMock.address);
 		log("ETH price feed mock deployed!!!");
 		log("===============================================================");
 	}
