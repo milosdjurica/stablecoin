@@ -34,5 +34,5 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 };
 
 export default func;
-func.id = "deploy_mockV3Aggregator"; // id required to prevent re-execution
-func.tags = ["mockV3Aggregator", "all"];
+func.id = "deploy_mock"; // id required to prevent re-execution
+func.tags = ["mock", "all"];
