@@ -25,10 +25,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 			log: true,
 		});
 
-		log("erc20Mock contract: ", erc20Mock.address);
-		log("erc20Mock deployed!!!");
-		log(`EthPriceFeedMock contract: `, ethPriceFeedMock.address);
-		log("ETH price feed mock deployed!!!");
+		log("Mocks deployed!!!");
 		log("===============================================================");
 	}
 };

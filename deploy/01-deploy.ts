@@ -14,18 +14,12 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
 	if (IS_DEV_CHAIN) {
 		let erc20Mock: ERC20Mock = await ethers.getContract("ERC20Mock");
-		// console.log("erc20Mock ---> ", erc20Mock);
 
 		let ethPriceFeedMock: MockV3Aggregator =
 			await ethers.getContract("MockV3Aggregator");
-		// console.log("ethPriceFeedMock ---> ", ethPriceFeedMock);
 
 		wEthAddress = await erc20Mock.getAddress();
 		wEthPriceFeedAddress = await ethPriceFeedMock.getAddress();
-		// console.log(
-		// 	"ethPriceFeedMock data -> ",
-		// 	await ethPriceFeedMock.latestRoundData(),
-		// );
 	}
 
 	const charityStableCoin = await deploy("CharityStableCoin", {
@@ -49,8 +43,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 		args: ENGINE_CONSTRUCTOR_ARGS,
 		log: true,
 	});
-
-	log(`CharityStableCoin contract: `, charityStableCoin.address);
 };
 
 export default func;
