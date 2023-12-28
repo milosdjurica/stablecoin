@@ -1,12 +1,15 @@
 import { DeployFunction } from "hardhat-deploy/types";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
-import { NetworkConfigItem, developmentChains } from "../utils/helper.config";
+import { developmentChains, networkConfig } from "../utils/helper.config";
 import { ERC20Mock, MockV3Aggregator } from "../typechain-types";
+import { verify } from "../utils/verify";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 	const { getNamedAccounts, ethers, deployments, network } = hre;
 	const { deployer } = await getNamedAccounts();
 	const { deploy, log } = deployments;
+
+	const CHAIN_ID = network.config.chainId!;
 
 	const IS_DEV_CHAIN = developmentChains.includes(network.name);
 	let wEthAddress;
@@ -20,6 +23,9 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
 		wEthAddress = await erc20Mock.getAddress();
 		wEthPriceFeedAddress = await ethPriceFeedMock.getAddress();
+	} else {
+		wEthAddress = networkConfig[CHAIN_ID].wEthAddress;
+		wEthPriceFeedAddress = networkConfig[CHAIN_ID].wEthUsdPriceFeed;
 	}
 
 	const charityStableCoin = await deploy("CharityStableCoin", {
@@ -36,13 +42,17 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 		CSC_ADDRESS,
 	];
 
-	console.log("ENGINE_CONSTRUCTOR_ARGS", ENGINE_CONSTRUCTOR_ARGS);
-
 	const cscEngine = await deploy("CSCEngine", {
 		from: deployer,
 		args: ENGINE_CONSTRUCTOR_ARGS,
 		log: true,
 	});
+
+	if (!IS_DEV_CHAIN && process.env.ETHERSCAN_API_KEY) {
+		console.log("Verifying contracts...");
+		await verify(CSC_ADDRESS, []);
+		await verify(cscEngine.address, ENGINE_CONSTRUCTOR_ARGS);
+	}
 };
 
 export default func;
