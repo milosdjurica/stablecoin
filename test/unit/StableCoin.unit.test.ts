@@ -47,5 +47,19 @@ console.log("Unit test");
 						await engine.getCollateralTokenAddress(),
 					);
 				});
+
+				it("Price Feed Address initializes correctly", async () => {
+					assert.equal(
+						await ethPriceFeedMock.getAddress(),
+						await engine.getPriceFeedAddress(),
+					);
+				});
+
+				it("Initializes CSC correctly", async () => {
+					assert.equal(
+						await stableCoin.getAddress(),
+						await engine.getCSCAddress(),
+					);
+				});
 			});
 		});

@@ -72,11 +72,15 @@ contract CSCEngine {
     // * View & Pure  //
     ////////////////////
 
-    function getCollateralTokenAddress() public view returns (address) {
+    function getCollateralTokenAddress() external view returns (address) {
         return i_collateralAddress;
     }
 
-    function getpriceFeedAddress() public view returns (address) {
+    function getPriceFeedAddress() external view returns (address) {
         return i_priceFeedAddress;
+    }
+
+    function getCSCAddress() external view returns (address) {
+        return address(i_csc);
     }
 }
