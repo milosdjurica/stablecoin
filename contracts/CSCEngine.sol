@@ -25,7 +25,7 @@ contract CSCEngine {
     ////////////////////
     CharityStableCoin private immutable i_csc;
     address private immutable i_collateralAddress;
-    address private immutable i_priceFeed;
+    address private immutable i_priceFeedAddress;
 
     ////////////////////
     // * Events 	  //
@@ -42,10 +42,10 @@ contract CSCEngine {
     ////////////////////
     // * Constructor  //
     ////////////////////
-    constructor(address tokenAddress, address priceFeedAddress, address cscAddress) {
-        i_collateralAddress = tokenAddress;
-        i_priceFeed = priceFeedAddress;
-        i_csc = CharityStableCoin(cscAddress);
+    constructor(address _tokenAddress, address _priceFeedAddress, address _cscAddress) {
+        i_collateralAddress = _tokenAddress;
+        i_priceFeedAddress = _priceFeedAddress;
+        i_csc = CharityStableCoin(_cscAddress);
     }
 
     ////////////////////////////
@@ -74,5 +74,9 @@ contract CSCEngine {
 
     function getCollateralTokenAddress() public view returns (address) {
         return i_collateralAddress;
+    }
+
+    function getpriceFeedAddress() public view returns (address) {
+        return i_priceFeedAddress;
     }
 }
