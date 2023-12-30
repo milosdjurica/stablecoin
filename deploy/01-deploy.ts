@@ -41,7 +41,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 		wEthPriceFeedAddress,
 		CSC_ADDRESS,
 	];
-
 	const cscEngine = await deploy("CSCEngine", {
 		from: deployer,
 		args: ENGINE_CONSTRUCTOR_ARGS,
@@ -49,6 +48,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 	});
 
 	if (!IS_DEV_CHAIN && process.env.ETHERSCAN_API_KEY) {
+		log("===============================================================");
 		console.log("Verifying contracts...");
 		await verify(CSC_ADDRESS, []);
 		await verify(cscEngine.address, ENGINE_CONSTRUCTOR_ARGS);
