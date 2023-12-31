@@ -7,7 +7,7 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 /**
  * @title Charity StableCoin
  * @author Milos Djurica
- * @notice Collateral: Exogenous (ETH & BTC)
+ * @notice Collateral: Exogenous (ETH)
  * Minting: Algorithmic
  * Relative Stability: Pegged to USD
  *
