@@ -35,13 +35,29 @@ console.log("Unit test");
 			});
 
 			describe("Mint Tests", () => {
-				it("Reverts if address Zero", async () => {
+				// !!!!! reverts if not owner, SWITCH OWNER TO CSCEngine first !!!!!
+
+				it("Reverts if Address Zero", async () => {
 					await expect(
 						stableCoin.mint(ADDRESS_ZERO, MINT_AMOUNT),
 					).to.be.revertedWithCustomError(
 						stableCoin,
 						"CharityStableCoin__NotZeroAddress",
 					);
+				});
+
+				it("Reverts if amount zero", async () => {
+					await expect(
+						stableCoin.mint(deployer, 0),
+					).to.be.revertedWithCustomError(
+						stableCoin,
+						"CharityStableCoin__MustBeMoreThanZero",
+					);
+				});
+
+				it("Mints tokens", async () => {
+					// ! check balance after minting
+					// console.log(await stableCoin.mint(deployer, MINT_AMOUNT));
 				});
 			});
 		});
