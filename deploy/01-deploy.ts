@@ -1,7 +1,11 @@
 import { DeployFunction } from "hardhat-deploy/types";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { developmentChains, networkConfig } from "../utils/helper.config";
-import { ERC20Mock, MockV3Aggregator } from "../typechain-types";
+import {
+	CharityStableCoin,
+	ERC20Mock,
+	MockV3Aggregator,
+} from "../typechain-types";
 import { verify } from "../utils/verify";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
@@ -46,6 +50,12 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 		args: ENGINE_CONSTRUCTOR_ARGS,
 		log: true,
 	});
+
+	const stableCoin: CharityStableCoin = await ethers.getContract(
+		"CharityStableCoin",
+		deployer,
+	);
+	stableCoin.transferOwnership(cscEngine.address);
 
 	if (!IS_DEV_CHAIN && process.env.ETHERSCAN_API_KEY) {
 		log("===============================================================");

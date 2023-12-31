@@ -11,7 +11,6 @@ import {
 } from "../../typechain-types";
 
 const isDevelopmentChain = developmentChains.includes(network.name);
-console.log("Unit test");
 
 !isDevelopmentChain
 	? describe.skip

@@ -3,26 +3,19 @@ import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
 import { assert, expect } from "chai";
 
 import { developmentChains } from "../../utils/helper.config";
-import {
-	CSCEngine,
-	CharityStableCoin,
-	ERC20Mock,
-	MockV3Aggregator,
-} from "../../typechain-types";
+import { CSCEngine, CharityStableCoin } from "../../typechain-types";
 
 const isDevelopmentChain = developmentChains.includes(network.name);
-console.log("Unit test");
 
 !isDevelopmentChain
 	? describe.skip
 	: describe("CharityStableCoin Unit Tests", () => {
 			const CHAIN_ID = network.config.chainId!!!;
-
-			let stableCoin: CharityStableCoin;
-
 			const MINT_AMOUNT = ethers.parseEther("1");
 			const ADDRESS_ZERO = ethers.ZeroAddress;
 
+			let stableCoin: CharityStableCoin;
+			let cscEngine: CSCEngine;
 			let deployer: string;
 			let accounts: HardhatEthersSigner[];
 
@@ -31,12 +24,12 @@ console.log("Unit test");
 				accounts = await ethers.getSigners();
 				deployer = (await getNamedAccounts()).deployer;
 
-				stableCoin = await ethers.getContract("CharityStableCoin", deployer);
+				stableCoin = await ethers.getContract("CharityStableCoin");
+				cscEngine = await ethers.getContract("CSCEngine", deployer);
+				// !!!!! Should find a way to connect cscEngine with stableCoin and then call function, because only owner can call them !!!!!
 			});
 
 			describe("Mint Tests", () => {
-				// !!!!! reverts if not owner, SWITCH OWNER TO CSCEngine first !!!!!
-
 				it("Reverts if Address Zero", async () => {
 					await expect(
 						stableCoin.mint(ADDRESS_ZERO, MINT_AMOUNT),
