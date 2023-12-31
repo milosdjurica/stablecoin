@@ -17,6 +17,7 @@ contract CSCEngine {
     ////////////////////
     error CSCEngine__TokenAddressesAndPriceFeedAddressesMustBeSameLength();
     error CSCEngine__TransactionFailed();
+    error CSCEngine__MustBeMoreThanZero();
 
     ////////////////////
     // * Types 		  //
@@ -39,6 +40,10 @@ contract CSCEngine {
     ////////////////////
     // * Modifiers 	  //
     ////////////////////
+    modifier isMoreThanZero(uint256 _amount) {
+        if (_amount <= 0) revert CSCEngine__MustBeMoreThanZero();
+        _;
+    }
 
     ////////////////////
     // * Functions	  //
@@ -64,7 +69,7 @@ contract CSCEngine {
     ////////////////////
     // * Public 	  //
     ////////////////////
-    function depositCollateral(uint256 _amount) public {
+    function depositCollateral(uint256 _amount) public isMoreThanZero(_amount) {
         s_collateralDeposited[msg.sender] += _amount;
         bool success = IERC20(i_tokenCollateralAddress).transferFrom(msg.sender, address(this), _amount);
         if (!success) revert CSCEngine__TransactionFailed();

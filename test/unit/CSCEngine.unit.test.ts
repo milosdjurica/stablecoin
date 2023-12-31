@@ -14,7 +14,7 @@ const isDevelopmentChain = developmentChains.includes(network.name);
 
 !isDevelopmentChain
 	? describe.skip
-	: describe("StableCoin Unit Tests", () => {
+	: describe("CSCEngine Unit Tests", () => {
 			const CHAIN_ID = network.config.chainId!!!;
 
 			let stableCoin: CharityStableCoin;
@@ -58,6 +58,17 @@ const isDevelopmentChain = developmentChains.includes(network.name);
 					assert.equal(
 						await stableCoin.getAddress(),
 						await engine.getCSCAddress(),
+					);
+				});
+			});
+
+			describe("Deposit Collateral Tests", () => {
+				it("Should Revert if 0 amount", async () => {
+					await expect(
+						engine.depositCollateral(0),
+					).to.be.revertedWithCustomError(
+						engine,
+						"CSCEngine__MustBeMoreThanZero",
 					);
 				});
 			});
