@@ -16,17 +16,21 @@ const isDevelopmentChain = developmentChains.includes(network.name);
 	? describe.skip
 	: describe("CSCEngine Unit Tests", () => {
 			const CHAIN_ID = network.config.chainId!!!;
+			const MINT_AMOUNT = ethers.parseEther("1111");
+			const ONE_ETHER = ethers.parseEther("1");
 
-			let stableCoin: CharityStableCoin;
-			let engine: CSCEngine;
 			let erc20Mock: ERC20Mock;
 			let ethPriceFeedMock: MockV3Aggregator;
+			let stableCoin: CharityStableCoin;
+			let engine: CSCEngine;
 
 			let deployer: string;
 			let accounts: HardhatEthersSigner[];
 
 			beforeEach(async () => {
 				await deployments.fixture(["all"]);
+
+				accounts = await ethers.getSigners();
 				deployer = (await getNamedAccounts()).deployer;
 
 				erc20Mock = await ethers.getContract("ERC20Mock", deployer);
@@ -36,7 +40,6 @@ const isDevelopmentChain = developmentChains.includes(network.name);
 				);
 				stableCoin = await ethers.getContract("CharityStableCoin", deployer);
 				engine = await ethers.getContract("CSCEngine", deployer);
-				accounts = await ethers.getSigners();
 			});
 
 			describe("Constructor Tests", () => {
@@ -63,12 +66,28 @@ const isDevelopmentChain = developmentChains.includes(network.name);
 			});
 
 			describe("Deposit Collateral Tests", () => {
+				beforeEach(async () => {
+					// erc20Mock.mint(deployer, MINT_AMOUNT);
+				});
+
 				it("Should Revert if 0 amount", async () => {
 					await expect(
 						engine.depositCollateral(0),
 					).to.be.revertedWithCustomError(
 						engine,
 						"CSCEngine__MustBeMoreThanZero",
+					);
+				});
+
+				it("Reverts if user doesn't have enough WETH balance");
+				it("Reverts if user doesn't approve engine contract");
+
+				it("Adds collateral to s_collateralDeposited mappings", async () => {
+					await erc20Mock.approve(engine, ONE_ETHER);
+					await engine.depositCollateral(ONE_ETHER);
+					assert.equal(
+						ONE_ETHER,
+						await engine.getCollateralDeposited(deployer),
 					);
 				});
 			});

@@ -36,6 +36,7 @@ contract CSCEngine {
     ////////////////////
     // * Events 	  //
     ////////////////////
+    event CollateralDeposited(address sender, uint256 amount);
 
     ////////////////////
     // * Modifiers 	  //
@@ -71,6 +72,7 @@ contract CSCEngine {
     ////////////////////
     function depositCollateral(uint256 _amount) public isMoreThanZero(_amount) {
         s_collateralDeposited[msg.sender] += _amount;
+        emit CollateralDeposited(msg.sender, _amount);
         bool success = IERC20(i_tokenCollateralAddress).transferFrom(msg.sender, address(this), _amount);
         if (!success) revert CSCEngine__TransactionFailed();
     }
@@ -97,5 +99,9 @@ contract CSCEngine {
 
     function getCSCAddress() external view returns (address) {
         return address(i_csc);
+    }
+
+    function getCollateralDeposited(address _person) external view returns (uint256) {
+        return s_collateralDeposited[_person];
     }
 }
