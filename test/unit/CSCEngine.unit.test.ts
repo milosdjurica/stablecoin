@@ -79,10 +79,21 @@ const isDevelopmentChain = developmentChains.includes(network.name);
 					);
 				});
 
-				it("Reverts if user doesn't have enough WETH balance");
-				it("Reverts if user doesn't approve engine contract");
+				it("Reverts if user doesn't have enough WETH balance", async () => {
+					await erc20Mock.approve(engine, ONE_ETHER);
+
+					// ! Args -> sender, current balance, needed
+					await expect(engine.depositCollateral(ONE_ETHER))
+						.to.be.revertedWithCustomError(
+							erc20Mock,
+							"ERC20InsufficientBalance",
+						)
+						.withArgs(deployer, 0, ONE_ETHER);
+				});
 
 				it("Adds collateral to s_collateralDeposited mappings", async () => {
+					erc20Mock.mint(deployer, MINT_AMOUNT);
+
 					await erc20Mock.approve(engine, ONE_ETHER);
 					await engine.depositCollateral(ONE_ETHER);
 					assert.equal(
