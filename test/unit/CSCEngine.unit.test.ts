@@ -91,6 +91,15 @@ const isDevelopmentChain = developmentChains.includes(network.name);
 						.withArgs(deployer, 0, ONE_ETHER);
 				});
 
+				it("Reverts if user doesn't approve engine contract", async () => {
+					await expect(engine.depositCollateral(ONE_ETHER))
+						.to.be.revertedWithCustomError(
+							erc20Mock,
+							"ERC20InsufficientAllowance",
+						)
+						.withArgs(await engine.getAddress(), 0, ONE_ETHER);
+				});
+
 				it("Adds collateral to s_collateralDeposited mappings", async () => {
 					erc20Mock.mint(deployer, MINT_AMOUNT);
 
