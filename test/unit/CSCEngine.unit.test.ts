@@ -110,5 +110,14 @@ const isDevelopmentChain = developmentChains.includes(network.name);
 						await engine.getCollateralDeposited(deployer),
 					);
 				});
+
+				it("Emits event after depositing", async () => {
+					erc20Mock.mint(deployer, MINT_AMOUNT);
+
+					await erc20Mock.approve(engine, ONE_ETHER);
+					await expect(engine.depositCollateral(ONE_ETHER))
+						.to.emit(engine, "CollateralDeposited")
+						.withArgs(deployer, ONE_ETHER);
+				});
 			});
 		});
