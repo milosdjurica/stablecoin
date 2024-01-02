@@ -7,11 +7,12 @@ pragma solidity ^0.8.20;
 
 import {CharityStableCoin} from "./CharityStableCoin.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 // Uncomment this line to use console.log
 // import "hardhat/console.sol";
 
-contract CSCEngine {
+contract CSCEngine is ReentrancyGuard {
     ////////////////////
     // * Errors 	  //
     ////////////////////
@@ -70,7 +71,8 @@ contract CSCEngine {
     ////////////////////
     // * Public 	  //
     ////////////////////
-    function depositCollateral(uint256 _amount) public isMoreThanZero(_amount) {
+    // TODO maybe switch to external and remove nonReentrant if not needed
+    function depositCollateral(uint256 _amount) public isMoreThanZero(_amount) nonReentrant {
         s_collateralDeposited[msg.sender] += _amount;
         emit CollateralDeposited(msg.sender, _amount);
         bool success = IERC20(i_tokenCollateralAddress).transferFrom(msg.sender, address(this), _amount);

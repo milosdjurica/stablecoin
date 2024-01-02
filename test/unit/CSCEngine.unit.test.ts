@@ -111,9 +111,8 @@ const isDevelopmentChain = developmentChains.includes(network.name);
 					);
 				});
 
-				it("Emits event after depositing", async () => {
+				it("Emits event when depositing", async () => {
 					erc20Mock.mint(deployer, MINT_AMOUNT);
-
 					await erc20Mock.approve(engine, ONE_ETHER);
 					await expect(engine.depositCollateral(ONE_ETHER))
 						.to.emit(engine, "CollateralDeposited")
