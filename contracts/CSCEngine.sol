@@ -19,6 +19,7 @@ contract CSCEngine is ReentrancyGuard {
     error CSCEngine__TokenAddressesAndPriceFeedAddressesMustBeSameLength();
     error CSCEngine__TransactionFailed();
     error CSCEngine__MustBeMoreThanZero();
+    error CSCEngine__MintFailed();
 
     ////////////////////
     // * Types 		  //
@@ -33,6 +34,7 @@ contract CSCEngine is ReentrancyGuard {
     address private immutable i_priceFeedAddress;
 
     mapping(address => uint256) s_collateralDeposited;
+    mapping(address => uint256) s_CscMinted;
 
     ////////////////////
     // * Events 	  //
@@ -77,6 +79,13 @@ contract CSCEngine is ReentrancyGuard {
         emit CollateralDeposited(msg.sender, _amount);
         bool success = IERC20(i_tokenCollateralAddress).transferFrom(msg.sender, address(this), _amount);
         if (!success) revert CSCEngine__TransactionFailed();
+    }
+
+    function mintCsc(uint256 _amountCscToMint) public isMoreThanZero(_amountCscToMint) nonReentrant {
+        s_CscMinted[msg.sender] += _amountCscToMint;
+        // ! Check if can mint
+        bool success = i_csc.mint(msg.sender, _amountCscToMint);
+        if (!success) revert CSCEngine__MintFailed();
     }
 
     ////////////////////
