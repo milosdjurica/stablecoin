@@ -103,17 +103,17 @@ contract CSCEngine is ReentrancyGuard {
     function getUserInformation(address _user)
         public
         view
-        returns (uint256 _totalCscMinted, uint256 _totalCollateralValue)
+        returns (uint256 _totalCscMinted, uint256 _totalCollateralDeposited)
     {
         _totalCscMinted = getCscMintedForUser(_user);
-        _totalCollateralValue = getCollateralValueForUser(_user);
+        _totalCollateralDeposited = getCollateralDepositedForUser(_user);
     }
 
     function getCscMintedForUser(address _user) public view returns (uint256) {
         return s_CscMinted[_user];
     }
 
-    function getCollateralValueForUser(address _user) public view returns (uint256) {
+    function getCollateralDepositedForUser(address _user) public view returns (uint256) {
         return s_collateralDeposited[_user];
     }
 
@@ -127,9 +127,5 @@ contract CSCEngine is ReentrancyGuard {
 
     function getCSCAddress() external view returns (address) {
         return address(i_csc);
-    }
-
-    function getCollateralDeposited(address _person) external view returns (uint256) {
-        return s_collateralDeposited[_person];
     }
 }

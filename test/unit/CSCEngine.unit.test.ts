@@ -107,7 +107,7 @@ const isDevelopmentChain = developmentChains.includes(network.name);
 					await engine.depositCollateral(ONE_ETHER);
 					assert.equal(
 						ONE_ETHER,
-						await engine.getCollateralDeposited(deployer),
+						await engine.getCollateralDepositedForUser(deployer),
 					);
 				});
 
@@ -132,6 +132,17 @@ const isDevelopmentChain = developmentChains.includes(network.name);
 					assert.equal(
 						await ethPriceFeedMock.getAddress(),
 						await engine.getPriceFeedAddress(),
+					);
+				});
+
+				it("getTotalCollateralDepositedForUser", async () => {
+					erc20Mock.mint(deployer, MINT_AMOUNT);
+					await erc20Mock.approve(engine, ONE_ETHER);
+
+					await engine.depositCollateral(ONE_ETHER);
+					assert.equal(
+						ONE_ETHER,
+						await engine.getCollateralDepositedForUser(deployer),
 					);
 				});
 			});
