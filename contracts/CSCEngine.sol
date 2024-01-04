@@ -100,6 +100,23 @@ contract CSCEngine is ReentrancyGuard {
     // * View & Pure  //
     ////////////////////
 
+    function getUserInformation(address _user)
+        public
+        view
+        returns (uint256 _totalCscMinted, uint256 _totalCollateralValue)
+    {
+        _totalCscMinted = getCscMintedForUser(_user);
+        _totalCollateralValue = getCollateralValueForUser(_user);
+    }
+
+    function getCscMintedForUser(address _user) public view returns (uint256) {
+        return s_CscMinted[_user];
+    }
+
+    function getCollateralValueForUser(address _user) public view returns (uint256) {
+        return s_collateralDeposited[_user];
+    }
+
     function getCollateralTokenAddress() external view returns (address) {
         return i_tokenCollateralAddress;
     }
