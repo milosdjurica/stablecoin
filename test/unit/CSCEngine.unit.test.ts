@@ -119,4 +119,20 @@ const isDevelopmentChain = developmentChains.includes(network.name);
 						.withArgs(deployer, ONE_ETHER);
 				});
 			});
+
+			describe("View and pure functions", () => {
+				it("getCscAddress", async () => {
+					assert.equal(
+						await stableCoin.getAddress(),
+						await engine.getCSCAddress(),
+					);
+				});
+
+				it("getPriceFeedAddress", async () => {
+					assert.equal(
+						await ethPriceFeedMock.getAddress(),
+						await engine.getPriceFeedAddress(),
+					);
+				});
+			});
 		});
