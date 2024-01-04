@@ -128,6 +128,13 @@ const isDevelopmentChain = developmentChains.includes(network.name);
 					);
 				});
 
+				it("getCollateralTokenAddress", async () => {
+					assert.equal(
+						await erc20Mock.getAddress(),
+						await engine.getCollateralTokenAddress(),
+					);
+				});
+
 				it("getPriceFeedAddress", async () => {
 					assert.equal(
 						await ethPriceFeedMock.getAddress(),
