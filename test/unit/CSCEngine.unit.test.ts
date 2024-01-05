@@ -66,10 +66,6 @@ const isDevelopmentChain = developmentChains.includes(network.name);
 			});
 
 			describe("Deposit Collateral Tests", () => {
-				beforeEach(async () => {
-					// erc20Mock.mint(deployer, MINT_AMOUNT);
-				});
-
 				it("Should Revert if 0 amount", async () => {
 					await expect(
 						engine.depositCollateral(0),
@@ -152,5 +148,7 @@ const isDevelopmentChain = developmentChains.includes(network.name);
 						await engine.getCollateralDepositedForUser(deployer),
 					);
 				});
+
+				it("getCscMintedForUser", async () => {});
 			});
 		});
