@@ -4,7 +4,8 @@ pragma solidity ^0.8.20;
 ////////////////////
 // * Imports 	  //
 ////////////////////
-import {ERC20Burnable, ERC20} from "../node_modules/@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
+import {ERC20Burnable, ERC20} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 // Uncomment this line to use console.log
 // import "hardhat/console.sol";
 
@@ -18,57 +19,27 @@ import {ERC20Burnable, ERC20} from "../node_modules/@openzeppelin/contracts/toke
  *
  * ERC20 Implementation of my stablecoin. This contract is meant to be governed by CSCEngine
  */
-contract CharityStableCoin is ERC20Burnable {
-    ////////////////////
-    // * Errors 	  //
-    ////////////////////
+contract CharityStableCoin is ERC20Burnable, Ownable {
+    error CharityStableCoin__MustBeMoreThanZero();
+    error CharityStableCoin__BurnAmountExceedsBalance();
+    error CharityStableCoin__NotZeroAddress();
 
-    ////////////////////
-    // * Types 		  //
-    ////////////////////
+    constructor() ERC20("CharityStableCoin", "CSC") Ownable(msg.sender) {}
 
-    ////////////////////
-    // * Variables	  //
-    ////////////////////
+    function burn(uint256 _amount) public override onlyOwner {
+        uint256 balance = balanceOf(msg.sender);
+        if (_amount <= 0) revert CharityStableCoin__MustBeMoreThanZero();
+        if (balance < _amount) revert CharityStableCoin__BurnAmountExceedsBalance();
 
-    ////////////////////
-    // * Events 	  //
-    ////////////////////
+        // ! super.burn because it is overriding function from ERC20Burnable
+        super.burn(_amount);
+    }
 
-    ////////////////////
-    // * Modifiers 	  //
-    ////////////////////
+    function mint(address _to, uint256 _amount) external onlyOwner returns (bool) {
+        if (_to == address(0)) revert CharityStableCoin__NotZeroAddress();
+        if (_amount <= 0) revert CharityStableCoin__MustBeMoreThanZero();
 
-    ////////////////////
-    // * Functions	  //
-    ////////////////////
-
-    ////////////////////
-    // * Constructor  //
-    ////////////////////
-    constructor() ERC20("CharityStableCoin", "CSC") {}
-
-    ////////////////////////////
-    // * Receive & Fallback   //
-    ////////////////////////////
-
-    ////////////////////
-    // * External 	  //
-    ////////////////////
-
-    ////////////////////
-    // * Public 	  //
-    ////////////////////
-
-    ////////////////////
-    // * Internal 	  //
-    ////////////////////
-
-    ////////////////////
-    // * Private 	  //
-    ////////////////////
-
-    ////////////////////
-    // * View & Pure  //
-    ////////////////////
+        _mint(_to, _amount);
+        return true;
+    }
 }
