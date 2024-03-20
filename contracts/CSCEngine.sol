@@ -13,6 +13,7 @@ pragma solidity ^0.8.20;
  *
  * ! Add description!!!
  */
+
 contract CSCEngine {
     ////////////////////
     // * Errors 	  //
@@ -50,6 +51,17 @@ contract CSCEngine {
     ////////////////////
     // * External 	  //
     ////////////////////
+    function depositCollateralAndMintCSC(address _tokenCollateralAddress, uint _amountCollateral) external {}
+
+    function redeemCollateralForCSC() external {}
+
+    function mintCSC() external {}
+
+    function redeemCollateral() external {}
+
+    function burnCSC() external {}
+
+    function liquidate() external {}
 
     ////////////////////
     // * Public 	  //
@@ -66,4 +78,5 @@ contract CSCEngine {
     ////////////////////
     // * View & Pure  //
     ////////////////////
+    function getHealthFactor() external view {}
 }

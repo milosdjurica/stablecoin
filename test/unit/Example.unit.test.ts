@@ -5,12 +5,12 @@ import { assert, expect } from "chai";
 import { developmentChains } from "../../utils/helper.config";
 
 const isDevelopmentChain = developmentChains.includes(network.name);
-console.log("UNIT TEST");
 
 !isDevelopmentChain
 	? describe.skip
 	: describe("Example Unit Tests", () => {
 			beforeEach(async () => {
+				console.log("UNIT TEST");
 				// ! Do some code here
 			});
 
