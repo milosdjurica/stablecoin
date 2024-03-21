@@ -4,20 +4,25 @@ pragma solidity ^0.8.20;
 ////////////////////
 // * Imports 	  //
 ////////////////////
+import {StableCoin} from "./StableCoin.sol";
+
 // Uncomment this line to use console.log
 // import "hardhat/console.sol";
 /**
- * @title CSCEngine
+ * @title SCEngine
  * @author Milos Djurica
  * @notice
  *
  * ! Add description!!!
  */
 
-contract CSCEngine {
+contract SCEngine {
     ////////////////////
     // * Errors 	  //
     ////////////////////
+    error SCEngine__NeedsMoreThanZero();
+    error SCEngine__TokenAddressesAndPriceFeedAddressesNotSameLength();
+    error SCEngine__NotAllowedToken();
 
     ////////////////////
     // * Types 		  //
@@ -26,6 +31,8 @@ contract CSCEngine {
     ////////////////////
     // * Variables	  //
     ////////////////////
+    StableCoin private immutable i_sc;
+    mapping(address token => address priceFeed) private s_priceFeeds;
 
     ////////////////////
     // * Events 	  //
@@ -34,6 +41,15 @@ contract CSCEngine {
     ////////////////////
     // * Modifiers 	  //
     ////////////////////
+    modifier moreThanZero(uint256 _amount) {
+        if (_amount == 0) revert SCEngine__NeedsMoreThanZero();
+        _;
+    }
+
+    modifier isAllowedToken(address _tokenAddress) {
+        if (_tokenAddress == address(0)) revert SCEngine__NotAllowedToken();
+        _;
+    }
 
     ////////////////////
     // * Functions	  //
@@ -42,7 +58,15 @@ contract CSCEngine {
     ////////////////////
     // * Constructor  //
     ////////////////////
-    constructor() {}
+    constructor(address[] memory _tokenAddresses, address[] memory _priceFeedAddresses, address _SCAddress) {
+        if (_tokenAddresses.length != _priceFeedAddresses.length) {
+            revert SCEngine__TokenAddressesAndPriceFeedAddressesNotSameLength();
+        }
+        for (uint256 i = 0; i < _tokenAddresses.length; i++) {
+            s_priceFeeds[_tokenAddresses[i]] = _priceFeedAddresses[i];
+        }
+        i_sc = StableCoin(_SCAddress);
+    }
 
     ////////////////////////////
     // * Receive & Fallback   //
@@ -51,7 +75,16 @@ contract CSCEngine {
     ////////////////////
     // * External 	  //
     ////////////////////
-    function depositCollateralAndMintCSC(address _tokenCollateralAddress, uint _amountCollateral) external {}
+    /**
+     *
+     * @param _tokenCollateralAddress The address of the token to be deposited as collateral
+     * @param _amountCollateral The amount of collateral to deposit
+     */
+    function depositCollateralAndMintCSC(address _tokenCollateralAddress, uint256 _amountCollateral)
+        external
+        moreThanZero(_amountCollateral)
+        isAllowedToken(_tokenCollateralAddress)
+    {}
 
     function redeemCollateralForCSC() external {}
 

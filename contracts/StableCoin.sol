@@ -10,7 +10,7 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 // import "hardhat/console.sol";
 
 /**
- * @title CharityStableCoin
+ * @title StableCoin
  * @author Milos Djurica
  * @notice
  * Collateral: Exogenous (ETH)
@@ -19,25 +19,25 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
  *
  * ERC20 Implementation of my stablecoin. This contract is meant to be governed by CSCEngine
  */
-contract CharityStableCoin is ERC20Burnable, Ownable {
-    error CharityStableCoin__MustBeMoreThanZero();
-    error CharityStableCoin__BurnAmountExceedsBalance();
-    error CharityStableCoin__NotZeroAddress();
+contract StableCoin is ERC20Burnable, Ownable {
+    error StableCoin__MustBeMoreThanZero();
+    error StableCoin__BurnAmountExceedsBalance();
+    error StableCoin__NotZeroAddress();
 
-    constructor() ERC20("CharityStableCoin", "CSC") Ownable(msg.sender) {}
+    constructor() ERC20("StableCoin", "CSC") Ownable(msg.sender) {}
 
     function burn(uint256 _amount) public override onlyOwner {
         uint256 balance = balanceOf(msg.sender);
-        if (_amount <= 0) revert CharityStableCoin__MustBeMoreThanZero();
-        if (balance < _amount) revert CharityStableCoin__BurnAmountExceedsBalance();
+        if (_amount <= 0) revert StableCoin__MustBeMoreThanZero();
+        if (balance < _amount) revert StableCoin__BurnAmountExceedsBalance();
 
         // ! super.burn because it is overriding function from ERC20Burnable
         super.burn(_amount);
     }
 
     function mint(address _to, uint256 _amount) external onlyOwner returns (bool) {
-        if (_to == address(0)) revert CharityStableCoin__NotZeroAddress();
-        if (_amount <= 0) revert CharityStableCoin__MustBeMoreThanZero();
+        if (_to == address(0)) revert StableCoin__NotZeroAddress();
+        if (_amount <= 0) revert StableCoin__MustBeMoreThanZero();
 
         _mint(_to, _amount);
         return true;

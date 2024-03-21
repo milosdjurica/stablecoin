@@ -7,13 +7,13 @@ pragma solidity ^0.8.20;
 // Uncomment this line to use console.log
 // import "hardhat/console.sol";
 /**
- * @title CSCEngine
+ * @title ISCEngine
  * @author Milos Djurica
  * @notice
  *
  * ! Add description!!!
  */
-contract ICSCEngine {
+contract ISCEngine {
     function depositCollateralAndMintCSC() external {}
 
     function redeemCollateralForCSC() external {}
