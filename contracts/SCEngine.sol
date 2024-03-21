@@ -6,6 +6,7 @@ pragma solidity ^0.8.20;
 ////////////////////
 import {StableCoin} from "./StableCoin.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 // Uncomment this line to use console.log
 // import "hardhat/console.sol";
@@ -24,6 +25,7 @@ contract SCEngine is ReentrancyGuard {
     error SCEngine__NeedsMoreThanZero();
     error SCEngine__TokenAddressesAndPriceFeedAddressesNotSameLength();
     error SCEngine__NotAllowedToken();
+    error SCEngine__TransferFailed();
 
     ////////////////////
     // * Types 		  //
@@ -34,10 +36,12 @@ contract SCEngine is ReentrancyGuard {
     ////////////////////
     StableCoin private immutable i_sc;
     mapping(address token => address priceFeed) private s_priceFeeds;
+    mapping(address user => mapping(address token => uint256 amount)) private s_collateralDeposited;
 
     ////////////////////
     // * Events 	  //
     ////////////////////
+    event CollateralDeposited(address indexed user, address indexed tokenAddress, uint256 indexed amount);
 
     ////////////////////
     // * Modifiers 	  //
@@ -86,7 +90,12 @@ contract SCEngine is ReentrancyGuard {
         moreThanZero(_amountCollateral)
         isAllowedToken(_tokenCollateralAddress)
         nonReentrant
-    {}
+    {
+        s_collateralDeposited[msg.sender][_tokenCollateralAddress] += _amountCollateral;
+        emit CollateralDeposited(msg.sender, _tokenCollateralAddress, _amountCollateral);
+        bool success = IERC20(_tokenCollateralAddress).transferFrom(msg.sender, address(this), _amountCollateral);
+        if (!success) revert SCEngine__TransferFailed();
+    }
 
     function redeemCollateralForCSC() external {}
 
