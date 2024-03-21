@@ -85,7 +85,7 @@ contract SCEngine is ReentrancyGuard {
      * @param _tokenCollateralAddress The address of the token to be deposited as collateral
      * @param _amountCollateral The amount of collateral to deposit
      */
-    function depositCollateralAndMintCSC(address _tokenCollateralAddress, uint256 _amountCollateral)
+    function depositCollateral(address _tokenCollateralAddress, uint256 _amountCollateral)
         external
         moreThanZero(_amountCollateral)
         isAllowedToken(_tokenCollateralAddress)
@@ -97,13 +97,13 @@ contract SCEngine is ReentrancyGuard {
         if (!success) revert SCEngine__TransferFailed();
     }
 
-    function redeemCollateralForCSC() external {}
+    function redeemCollateralForSC() external {}
 
-    function mintCSC() external {}
+    function mintSC() external {}
 
     function redeemCollateral() external {}
 
-    function burnCSC() external {}
+    function burnSC() external {}
 
     function liquidate() external {}
 
