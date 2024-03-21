@@ -5,6 +5,7 @@ pragma solidity ^0.8.20;
 // * Imports 	  //
 ////////////////////
 import {StableCoin} from "./StableCoin.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 // Uncomment this line to use console.log
 // import "hardhat/console.sol";
@@ -16,7 +17,7 @@ import {StableCoin} from "./StableCoin.sol";
  * ! Add description!!!
  */
 
-contract SCEngine {
+contract SCEngine is ReentrancyGuard {
     ////////////////////
     // * Errors 	  //
     ////////////////////
@@ -84,6 +85,7 @@ contract SCEngine {
         external
         moreThanZero(_amountCollateral)
         isAllowedToken(_tokenCollateralAddress)
+        nonReentrant
     {}
 
     function redeemCollateralForCSC() external {}
