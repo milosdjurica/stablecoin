@@ -38,5 +38,5 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 	}
 };
 export default func;
-func.id = "deploy_example"; // id required to prevent re-execution
-func.tags = ["example", "all"];
+func.id = "00_deployMocks"; // id required to prevent re-execution
+func.tags = ["mocks", "all"];

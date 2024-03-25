@@ -10,6 +10,9 @@ export let networkConfig: NetworkConfig = {
 	11155111: {
 		wEthAddress: "0xdd13e55209fd76afe204dbda4007c227904f0a81",
 		wEthUsdPriceFeed: "0x694aa1769357215de4fac081bf1f309adc325306",
+		// ! ADD ADDRESSES !!!!!
+		// ! ADD ADDRESSES !!!!!
+		// ! ADD ADDRESSES !!!!!
 		wBtcAddress: "",
 		wBtcUsdPriceFeed: "",
 	},

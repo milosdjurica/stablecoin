@@ -32,7 +32,33 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 		wBtcAddress = networkConfig[CHAIN_ID].wBtcAddress;
 		wBtcPriceFeedAddress = networkConfig[CHAIN_ID].wBtcUsdPriceFeed;
 	}
+
+	const stableCoinDeploy = await deploy("StableCoin", {
+		from: deployer,
+		args: [], // ! constructor args
+		log: true,
+	});
+	const SC_ADDRESS = stableCoinDeploy.address;
+
+	const ENGINE_CONSTRUCTOR_ARGS = [
+		[wEthAddress, wBtcAddress],
+		[wEthPriceFeedAddress, wBtcPriceFeedAddress],
+		SC_ADDRESS,
+	];
+
+	const scEngine = await deploy("SCEngine", {
+		from: deployer,
+		args: ENGINE_CONSTRUCTOR_ARGS,
+		log: true,
+	});
+
+	const stableCoin: StableCoin = await ethers.getContract(
+		"StableCoin",
+		deployer,
+	);
+
+	stableCoin.transferOwnership(scEngine.address);
 };
 export default func;
-func.id = "deploy_example"; // id required to prevent re-execution
-func.tags = ["example", "all"];
+func.id = "01_deploy"; // id required to prevent re-execution
+func.tags = ["stablecoin", "all"];
