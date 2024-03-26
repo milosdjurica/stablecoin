@@ -50,6 +50,7 @@
 		"prettier:write": "yarn prettier --write \"**/*.{js,json,md,sol,ts,yml}\""
 	},
 	"dependencies": {
+		"@chainlink/contracts": "^1.0.0",
 		"@openzeppelin/contracts": "^5.0.2"
 	}
 }
