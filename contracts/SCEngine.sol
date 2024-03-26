@@ -37,6 +37,8 @@ contract SCEngine is ReentrancyGuard {
     StableCoin private immutable i_sc;
     mapping(address token => address priceFeed) private s_priceFeeds;
     mapping(address user => mapping(address token => uint256 amount)) private s_collateralDeposited;
+    mapping(address user => uint256 amountSCMinted) private s_SCMinted;
+    address[] private s_collateralTokens;
 
     ////////////////////
     // * Events 	  //
@@ -69,6 +71,7 @@ contract SCEngine is ReentrancyGuard {
         }
         for (uint256 i = 0; i < _tokenAddresses.length; i++) {
             s_priceFeeds[_tokenAddresses[i]] = _priceFeedAddresses[i];
+            s_collateralTokens.push(_tokenAddresses[i]);
         }
         i_sc = StableCoin(_SCAddress);
     }
@@ -97,9 +100,16 @@ contract SCEngine is ReentrancyGuard {
         if (!success) revert SCEngine__TransferFailed();
     }
 
-    function redeemCollateralForSC() external {}
+    /**
+     *
+     * @param amountSCToMint Amount of Stablecoin to mint
+     */
+    function mintSC(uint256 amountSCToMint) external moreThanZero(amountSCToMint) nonReentrant {
+        s_SCMinted[msg.sender] += amountSCToMint;
+        _revertIfHealthFactorIsBroken(msg.sender);
+    }
 
-    function mintSC() external {}
+    function redeemCollateralForSC() external {}
 
     function redeemCollateral() external {}
 
@@ -123,4 +133,29 @@ contract SCEngine is ReentrancyGuard {
     // * View & Pure  //
     ////////////////////
     function getHealthFactor() external view {}
+
+    function getAccountCollateralValue(address user) public view returns (uint256 collaterallValueInUSD) {
+        for (uint256 i = 0; i < s_collateralTokens.length; i++) {
+            address token = s_collateralTokens[i];
+            uint256 amount = s_collateralDeposited[user][token];
+            collaterallValueInUSD += getUSDValue(token, amount);
+        }
+    }
+
+    function getUSDValue(address token, uint256 amount) public view returns (uint256) {}
+
+    function _revertIfHealthFactorIsBroken(address user) internal view {}
+
+    function _healthFactor(address user) internal view returns (uint256) {
+        (uint256 totalSCMinted, uint256 collateralValueInUSD) = _getAccountInformation(user);
+    }
+
+    function _getAccountInformation(address user)
+        private
+        view
+        returns (uint256 totalSCMinted, uint256 collateralValueInUSD)
+    {
+        totalSCMinted = s_SCMinted[user];
+        collateralValueInUSD = getAccountCollateralValue(user);
+    }
 }
