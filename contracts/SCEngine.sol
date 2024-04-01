@@ -23,9 +23,11 @@ contract SCEngine is ReentrancyGuard {
     ////////////////////
     // * Errors 	  //
     ////////////////////
+    error SC__MintFailed();
+    error SCEngine__BreaksHealthFactor(uint256 userHealthFactor);
     error SCEngine__NeedsMoreThanZero();
     error SCEngine__TokenAddressesAndPriceFeedAddressesNotSameLength();
-    error SCEngine__NotAllowedToken();
+    error SCEngine__NotAllowedToken(address tokenAddress);
     error SCEngine__TransferFailed();
 
     ////////////////////
@@ -35,6 +37,11 @@ contract SCEngine is ReentrancyGuard {
     ////////////////////
     // * Variables	  //
     ////////////////////
+    uint256 private constant ADDITIONAL_FEED_PRECISION_10 = 10e10;
+    uint256 private constant PRECISION_18 = 10e18;
+    uint256 private constant LIQUIDATION_THRESHOLD = 50;
+    uint256 private constant LIQUIDATION_PRECISION = 100;
+    uint256 private constant MIN_HEALTH_FACTOR = 1;
     StableCoin private immutable i_sc;
     mapping(address token => address priceFeed) private s_priceFeeds;
     mapping(address user => mapping(address token => uint256 amount)) private s_collateralDeposited;
@@ -55,7 +62,7 @@ contract SCEngine is ReentrancyGuard {
     }
 
     modifier isAllowedToken(address _tokenAddress) {
-        if (_tokenAddress == address(0)) revert SCEngine__NotAllowedToken();
+        if (_tokenAddress == address(0)) revert SCEngine__NotAllowedToken(_tokenAddress);
         _;
     }
 
@@ -108,6 +115,8 @@ contract SCEngine is ReentrancyGuard {
     function mintSC(uint256 amountSCToMint) external moreThanZero(amountSCToMint) nonReentrant {
         s_SCMinted[msg.sender] += amountSCToMint;
         _revertIfHealthFactorIsBroken(msg.sender);
+        bool minted = i_sc.mint(msg.sender, amountSCToMint);
+        if(!minted) revert SC__MintFailed();
     }
 
     function redeemCollateralForSC() external {}
@@ -135,20 +144,40 @@ contract SCEngine is ReentrancyGuard {
     ////////////////////
     function getHealthFactor() external view {}
 
-    function getAccountCollateralValue(address user) public view returns (uint256 collaterallValueInUSD) {
+    function getAccountCollateralValue(address _user) public view returns (uint256 collaterallValueInUSD) {
         for (uint256 i = 0; i < s_collateralTokens.length; i++) {
             address token = s_collateralTokens[i];
-            uint256 amount = s_collateralDeposited[user][token];
+            uint256 amount = s_collateralDeposited[_user][token];
             collaterallValueInUSD += getUSDValue(token, amount);
         }
+        return collaterallValueInUSD;
     }
 
-    function getUSDValue(address token, uint256 amount) public view returns (uint256) {}
+    function getUSDValue(address _token, uint256 _amount) public view returns (uint256) {
+        AggregatorV3Interface priceFeed = AggregatorV3Interface(s_priceFeeds[_token]);
+        (, int256 price,,,) = priceFeed.latestRoundData();
+        // ! Price is 2345 * 10e8 -> because of that we need to put it on same precision (10e18)
+        return ((uint256(price) * ADDITIONAL_FEED_PRECISION_10) * _amount) / PRECISION_18;
+    }
 
-    function _revertIfHealthFactorIsBroken(address user) internal view {}
+    function _revertIfHealthFactorIsBroken(address _user) internal view {
+        uint256 userHealthFactor = _healthFactor(_user);
+        if (userHealthFactor < MIN_HEALTH_FACTOR) revert SCEngine__BreaksHealthFactor(userHealthFactor);
+    }
 
-    function _healthFactor(address user) internal view returns (uint256) {
-        (uint256 totalSCMinted, uint256 collateralValueInUSD) = _getAccountInformation(user);
+    function _healthFactor(address _user) internal view returns (uint256) {
+        (uint256 totalSCMinted, uint256 collateralValueInUSD) = _getAccountInformation(_user);
+        // ! must have 2x collaretral value than DSC
+
+        // ! Bad example
+        // $150 ETH / 100 DSC = 1.5
+        // 150*50 = 7500/100 = 75/100DSC <1 !!!
+
+        // ! Good example
+        // $1000 ETH / 200 DSC = 5
+        // 1000 * 50 = 50 000 / 100 = 500 / 200 > 1 !!!
+        uint256 collateralAdjustedForThreshold = (collateralValueInUSD * LIQUIDATION_THRESHOLD) / LIQUIDATION_PRECISION;
+        return collateralAdjustedForThreshold * PRECISION_18 / totalSCMinted;
     }
 
     function _getAccountInformation(address user)
