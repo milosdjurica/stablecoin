@@ -23,12 +23,12 @@ contract SCEngine is ReentrancyGuard {
     ////////////////////
     // * Errors 	  //
     ////////////////////
-    error SC__MintFailed();
-    error SCEngine__BreaksHealthFactor(uint256 userHealthFactor);
     error SCEngine__NeedsMoreThanZero();
     error SCEngine__TokenAddressesAndPriceFeedAddressesNotSameLength();
     error SCEngine__NotAllowedToken(address tokenAddress);
     error SCEngine__TransferFailed();
+    error SCEngine__BreaksHealthFactor(uint256 userHealthFactor);
+    error SC__MintFailed();
 
     ////////////////////
     // * Types 		  //
@@ -116,7 +116,7 @@ contract SCEngine is ReentrancyGuard {
         s_SCMinted[msg.sender] += amountSCToMint;
         _revertIfHealthFactorIsBroken(msg.sender);
         bool minted = i_sc.mint(msg.sender, amountSCToMint);
-        if(!minted) revert SC__MintFailed();
+        if (!minted) revert SC__MintFailed();
     }
 
     function redeemCollateralForSC() external {}
@@ -167,15 +167,16 @@ contract SCEngine is ReentrancyGuard {
 
     function _healthFactor(address _user) internal view returns (uint256) {
         (uint256 totalSCMinted, uint256 collateralValueInUSD) = _getAccountInformation(_user);
-        // ! must have 2x collaretral value than DSC
+        // ! must have 2x collaretral value than SC
 
         // ! Bad example
-        // $150 ETH / 100 DSC = 1.5
+        // $150 ETH / 100 SC = 1.5
         // 150*50 = 7500/100 = 75/100DSC <1 !!!
 
         // ! Good example
-        // $1000 ETH / 200 DSC = 5
+        // $1000 ETH / 200 SC = 5
         // 1000 * 50 = 50 000 / 100 = 500 / 200 > 1 !!!
+        // ! Basically this line just divides with 2, because we need to have more than 2x collateral than SC
         uint256 collateralAdjustedForThreshold = (collateralValueInUSD * LIQUIDATION_THRESHOLD) / LIQUIDATION_PRECISION;
         return collateralAdjustedForThreshold * PRECISION_18 / totalSCMinted;
     }

@@ -12,6 +12,7 @@ const isDevelopmentChain = developmentChains.includes(network.name);
 			beforeEach(async () => {
 				console.log("UNIT TEST");
 				// ! Do some code here
+				// ! Get deployed contracts and mocks, and add constants that will be used
 			});
 
 			describe("Constructor Tests", () => {
