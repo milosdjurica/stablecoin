@@ -13,28 +13,29 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 	const { deploy, log } = deployments;
 
 	if (developmentChains.includes(network.name)) {
-		console.log("Local network detected! Deploying mocks...");
-
-		const erc20Mock = await deploy("ERC20Mock", {
-			from: deployer,
-			args: [],
-			log: true,
-		});
-
-		const ethPriceFeedMock = await deploy("MockV3Aggregator", {
-			from: deployer,
-			args: [DECIMALS, ETH_USD_PRICE],
-			log: true,
-		});
-
-		const btcPriceFeedMock = await deploy("MockV3Aggregator", {
-			from: deployer,
-			args: [DECIMALS, BTC_USD_PRICE],
-			log: true,
-		});
-
-		log("Mocks deployed!!!");
-		log("===============================================================");
+		// console.log("Local network detected! Deploying mocks...");
+		// const erc20MockETH = await deploy("ERC20Mock", {
+		// 	from: deployer,
+		// 	args: [],
+		// 	log: true,
+		// });
+		// const erc20MockBTC = await deploy("ERC20Mock", {
+		// 	from: deployer,
+		// 	args: [],
+		// 	log: true,
+		// });
+		// const ethPriceFeedMock = await deploy("MockV3Aggregator", {
+		// 	from: deployer,
+		// 	args: [DECIMALS, ETH_USD_PRICE],
+		// 	log: true,
+		// });
+		// const btcPriceFeedMock = await deploy("MockV3Aggregator", {
+		// 	from: deployer,
+		// 	args: [DECIMALS, BTC_USD_PRICE],
+		// 	log: true,
+		// });
+		// log("Mocks deployed!!!");
+		// log("===============================================================");
 	}
 };
 export default func;

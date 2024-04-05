@@ -1,6 +1,12 @@
-import { DeployFunction } from "hardhat-deploy/types";
+import { Address, DeployFunction } from "hardhat-deploy/types";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
-import { developmentChains, networkConfig } from "../utils/helper.config";
+import {
+	BTC_USD_PRICE,
+	DECIMALS,
+	ETH_USD_PRICE,
+	developmentChains,
+	networkConfig,
+} from "../utils/helper.config";
 import { StableCoin, ERC20Mock, MockV3Aggregator } from "../typechain-types";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
@@ -10,22 +16,45 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
 	const CHAIN_ID = network.config.chainId!;
 	const IS_DEV_CHAIN = developmentChains.includes(network.name);
-	let wEthAddress;
-	let wEthPriceFeedAddress;
-	let wBtcAddress;
-	let wBtcPriceFeedAddress;
+	let wEthAddress: Address;
+	let wEthPriceFeedAddress: Address;
+	let wBtcAddress: Address;
+	let wBtcPriceFeedAddress: Address;
 
 	if (IS_DEV_CHAIN) {
-		let erc20Mock: ERC20Mock = await ethers.getContract("ERC20Mock");
+		console.log("Local network detected! Deploying mocks...");
 
-		let ethPriceFeedMock: MockV3Aggregator =
-			await ethers.getContract("MockV3Aggregator");
-		let btcPriceFeedMock: MockV3Aggregator =
-			await ethers.getContract("MockV3Aggregator");
+		const ethErc20Mock = await deploy("ERC20Mock", {
+			from: deployer,
+			args: [],
+			log: true,
+		});
 
-		wEthAddress = await erc20Mock.getAddress();
-		wEthPriceFeedAddress = await ethPriceFeedMock.getAddress();
-		wBtcPriceFeedAddress = await ethPriceFeedMock.getAddress();
+		const btcErc20Mock = await deploy("ERC20Mock", {
+			from: deployer,
+			args: [],
+			log: true,
+		});
+
+		const ethPriceFeedMock = await deploy("MockV3Aggregator", {
+			from: deployer,
+			args: [DECIMALS, ETH_USD_PRICE],
+			log: true,
+		});
+
+		const btcPriceFeedMock = await deploy("MockV3Aggregator", {
+			from: deployer,
+			args: [DECIMALS, BTC_USD_PRICE],
+			log: true,
+		});
+
+		log("Mocks deployed!!!");
+		log("===============================================================");
+
+		wEthAddress = ethErc20Mock.address;
+		wBtcAddress = btcErc20Mock.address;
+		wEthPriceFeedAddress = ethPriceFeedMock.address;
+		wBtcPriceFeedAddress = btcPriceFeedMock.address;
 	} else {
 		wEthAddress = networkConfig[CHAIN_ID].wEthAddress;
 		wEthPriceFeedAddress = networkConfig[CHAIN_ID].wEthUsdPriceFeed;
@@ -45,7 +74,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 		[wEthPriceFeedAddress, wBtcPriceFeedAddress],
 		SC_ADDRESS,
 	];
-
+	// console.log(ENGINE_CONSTRUCTOR_ARGS);
 	const scEngine = await deploy("SCEngine", {
 		from: deployer,
 		args: ENGINE_CONSTRUCTOR_ARGS,
