@@ -14,7 +14,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 	const { deployer, player } = await getNamedAccounts();
 	const { deploy, log } = deployments;
 
-	const CHAIN_ID = network.config.chainId!;
+	const CHAIN_ID = network.config.chainId!!!!!;
 	const IS_DEV_CHAIN = developmentChains.includes(network.name);
 	let wEthAddress: Address;
 	let wEthPriceFeedAddress: Address;
@@ -33,6 +33,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 			from: player,
 			args: [],
 			log: true,
+			// ! Check if should to deploy different contract???
+			// skipIfAlreadyDeployed: false,
 		});
 
 		const ethPriceFeedMock = await deploy("MockV3Aggregator", {
@@ -44,7 +46,13 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 			from: player,
 			args: [DECIMALS, BTC_USD_PRICE],
 			log: true,
+			// skipIfAlreadyDeployed: false,
 		});
+
+		await deployments.save("EthERC20Mock", ethErc20Mock);
+		await deployments.save("BtcERC20Mock", btcErc20Mock);
+		await deployments.save("EthPriceFeedMock", ethPriceFeedMock);
+		await deployments.save("BtcPriceFeedMock", btcPriceFeedMock);
 		log("Mocks deployed!!!");
 		log("===============================================================");
 

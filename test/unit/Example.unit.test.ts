@@ -9,6 +9,7 @@ import {
 	SCEngine,
 	StableCoin,
 } from "../../typechain-types";
+import { Deployment } from "hardhat-deploy/types";
 
 const isDevelopmentChain = developmentChains.includes(network.name);
 
@@ -28,33 +29,44 @@ const isDevelopmentChain = developmentChains.includes(network.name);
 				const deployer = accounts[0];
 				const player1 = accounts[1];
 				const player2 = accounts[2];
-
-				console.log("player", player1.address);
-				const ethErc20Mock: ERC20Mock = await ethers.getContract(
+				// ! Saved deployments from deploy script
+				const ethErc20MockDeployment: Deployment =
+					await deployments.get("EthERC20Mock");
+				const btcErc20MockDeployment: Deployment =
+					await deployments.get("BtcERC20Mock");
+				const ethPriceFeedMockDeployment: Deployment =
+					await deployments.get("EthPriceFeedMock");
+				const btcPriceFeedMockDeployment: Deployment =
+					await deployments.get("BtcPriceFeedMock");
+				// ! Mocks
+				// ! Be careful with type conversions!!!
+				const ethErc20Mock = (await ethers.getContractAt(
 					"ERC20Mock",
-					deployer,
-				);
-				const btcErc20Mock: ERC20Mock = await ethers.getContract(
+					ethErc20MockDeployment.address,
+				)) as unknown as ERC20Mock;
+				ethErc20Mock;
+				const btcErc20Mock = (await ethers.getContractAt(
 					"ERC20Mock",
-					player1,
-				);
-				const ethPriceFeedMock: MockV3Aggregator = await ethers.getContract(
+					btcErc20MockDeployment.address,
+				)) as unknown as ERC20Mock;
+				const ethPriceFeedMock = (await ethers.getContractAt(
 					"MockV3Aggregator",
-					deployer,
-				);
-				const btcPriceFeedMock: MockV3Aggregator = await ethers.getContract(
+					ethPriceFeedMockDeployment.address,
+				)) as unknown as MockV3Aggregator;
+				const btcPriceFeedMock = (await ethers.getContractAt(
 					"MockV3Aggregator",
-					player1,
-				);
+					btcPriceFeedMockDeployment.address,
+				)) as unknown as MockV3Aggregator;
+				// ! Contracts
 				const stableCoin: StableCoin = await ethers.getContract("StableCoin");
 				const engine: SCEngine = await ethers.getContract("SCEngine");
-
-				console.log(await ethErc20Mock.getAddress());
-				console.log(await btcErc20Mock.getAddress());
-				console.log(await ethPriceFeedMock.getAddress());
-				console.log(await btcPriceFeedMock.getAddress());
-				console.log(await stableCoin.getAddress());
-				console.log(await engine.getAddress());
+				// console.log(btcErc20Mock, engine);
+				// console.log(await ethErc20Mock.getAddress());
+				// console.log(await btcErc20Mock.getAddress());
+				// console.log(await ethPriceFeedMock.getAddress());
+				// console.log(await btcPriceFeedMock.getAddress());
+				// console.log(await stableCoin.getAddress());
+				// console.log(await engine.getAddress());
 
 				// TODO maybe its better to instantly take only addresses
 				// const accounts1 = await getNamedAccounts();
