@@ -24,7 +24,7 @@ contract StableCoin is ERC20Burnable, Ownable {
     error StableCoin__BurnAmountExceedsBalance();
     error StableCoin__NotZeroAddress();
 
-    constructor() ERC20("StableCoin", "CSC") Ownable(msg.sender) {}
+    constructor() ERC20("StableCoin", "SC") Ownable(msg.sender) {}
 
     function burn(uint256 _amount) public override onlyOwner {
         uint256 balance = balanceOf(msg.sender);

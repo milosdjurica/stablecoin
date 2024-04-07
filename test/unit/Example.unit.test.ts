@@ -21,6 +21,13 @@ const isDevelopmentChain = developmentChains.includes(network.name);
 			const MINT_AMOUNT = ethers.parseEther("1111");
 			const ONE_ETHER = ethers.parseEther("1");
 
+			let ethErc20Mock: ERC20Mock;
+			let btcErc20Mock: ERC20Mock;
+			let ethPriceFeedMock: MockV3Aggregator;
+			let btcPriceFeedMock: MockV3Aggregator;
+			let stableCoin: StableCoin;
+			let engine: SCEngine;
+
 			beforeEach(async () => {
 				await deployments.fixture(["all"]);
 				// ! Test accounts provided by Hardhat
@@ -40,30 +47,61 @@ const isDevelopmentChain = developmentChains.includes(network.name);
 					await deployments.get("BtcPriceFeedMock");
 				// ! Mocks
 				// ! Be careful with type conversions!!!
-				const ethErc20Mock = (await ethers.getContractAt(
+				ethErc20Mock = (await ethers.getContractAt(
 					"ERC20Mock",
 					ethErc20MockDeployment.address,
 				)) as unknown as ERC20Mock;
-				ethErc20Mock;
-				const btcErc20Mock = (await ethers.getContractAt(
+				btcErc20Mock = (await ethers.getContractAt(
 					"ERC20Mock",
 					btcErc20MockDeployment.address,
 				)) as unknown as ERC20Mock;
-				const ethPriceFeedMock = (await ethers.getContractAt(
+				ethPriceFeedMock = (await ethers.getContractAt(
 					"MockV3Aggregator",
 					ethPriceFeedMockDeployment.address,
 				)) as unknown as MockV3Aggregator;
-				const btcPriceFeedMock = (await ethers.getContractAt(
+				btcPriceFeedMock = (await ethers.getContractAt(
 					"MockV3Aggregator",
 					btcPriceFeedMockDeployment.address,
 				)) as unknown as MockV3Aggregator;
 				// ! Contracts
-				const stableCoin: StableCoin = await ethers.getContract("StableCoin");
-				const engine: SCEngine = await ethers.getContract("SCEngine");
+				stableCoin = await ethers.getContract("StableCoin");
+				engine = await ethers.getContract("SCEngine");
 			});
 
-			describe("Constructor Tests", () => {
-				it("Example test", async () => {
+			describe("StableCoin Initialization", () => {
+				it("Initializes correctly", async () => {
+					const SC_NAME = await stableCoin.name();
+					const SC_SYMBOL = await stableCoin.symbol();
+					const REAL_OWNER = await stableCoin.owner();
+					assert.equal(SC_NAME, "StableCoin");
+					assert.equal(SC_SYMBOL, "SC");
+					assert.equal(await engine.getAddress(), REAL_OWNER);
+				});
+
+				describe("StableCoin Burn Tests", () => {
+					it("Revert if 0 amount", async () => {
+						await expect(stableCoin.burn(0)).to.be.revertedWithCustomError(
+							stableCoin,
+							"StableCoin__MustBeMoreThanZero",
+						);
+					});
+
+					it("Revert if exceeds balance", async () => {
+						// TODO finish tests
+					});
+				});
+
+				describe("StableCoin Mint Tests", () => {
+					it("Example", async () => {
+						// TODO
+						assert.equal(1, 1);
+					});
+				});
+			});
+
+			describe("SCEngine Constructor Tests", () => {
+				it("StableCoin Address Test", async () => {
+					// TODO
 					assert.equal(1, 1);
 				});
 			});
