@@ -7,11 +7,11 @@ import {
 	developmentChains,
 	networkConfig,
 } from "../utils/helper.config";
-import { StableCoin, ERC20Mock, MockV3Aggregator } from "../typechain-types";
+import { StableCoin } from "../typechain-types";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 	const { getNamedAccounts, ethers, deployments, network } = hre;
-	const { deployer } = await getNamedAccounts();
+	const { deployer, player } = await getNamedAccounts();
 	const { deploy, log } = deployments;
 
 	const CHAIN_ID = network.config.chainId!;
@@ -23,15 +23,14 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
 	if (IS_DEV_CHAIN) {
 		console.log("Local network detected! Deploying mocks...");
-
+		// ! TODO maybe deploy with different contracts (deployer, player, ...)
 		const ethErc20Mock = await deploy("ERC20Mock", {
 			from: deployer,
 			args: [],
 			log: true,
 		});
-
 		const btcErc20Mock = await deploy("ERC20Mock", {
-			from: deployer,
+			from: player,
 			args: [],
 			log: true,
 		});
@@ -41,13 +40,11 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 			args: [DECIMALS, ETH_USD_PRICE],
 			log: true,
 		});
-
 		const btcPriceFeedMock = await deploy("MockV3Aggregator", {
-			from: deployer,
+			from: player,
 			args: [DECIMALS, BTC_USD_PRICE],
 			log: true,
 		});
-
 		log("Mocks deployed!!!");
 		log("===============================================================");
 
@@ -57,8 +54,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 		wBtcPriceFeedAddress = btcPriceFeedMock.address;
 	} else {
 		wEthAddress = networkConfig[CHAIN_ID].wEthAddress;
-		wEthPriceFeedAddress = networkConfig[CHAIN_ID].wEthUsdPriceFeed;
 		wBtcAddress = networkConfig[CHAIN_ID].wBtcAddress;
+		wEthPriceFeedAddress = networkConfig[CHAIN_ID].wEthUsdPriceFeed;
 		wBtcPriceFeedAddress = networkConfig[CHAIN_ID].wBtcUsdPriceFeed;
 	}
 
@@ -80,7 +77,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 		args: ENGINE_CONSTRUCTOR_ARGS,
 		log: true,
 	});
-
 	const stableCoin: StableCoin = await ethers.getContract(
 		"StableCoin",
 		deployer,
