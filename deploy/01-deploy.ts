@@ -1,12 +1,6 @@
 import { Address, DeployFunction } from "hardhat-deploy/types";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
-import {
-	BTC_USD_PRICE,
-	DECIMALS,
-	ETH_USD_PRICE,
-	developmentChains,
-	networkConfig,
-} from "../utils/helper.config";
+import { developmentChains, networkConfig } from "../utils/helper.config";
 import { StableCoin } from "../typechain-types";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
@@ -22,44 +16,10 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 	let wBtcPriceFeedAddress: Address;
 
 	if (IS_DEV_CHAIN) {
-		console.log("Local network detected! Deploying mocks...");
-		// ! TODO maybe deploy with different contracts (deployer, player, ...)
-		const ethErc20Mock = await deploy("ERC20Mock", {
-			from: deployer,
-			args: [],
-			log: true,
-		});
-		const btcErc20Mock = await deploy("ERC20Mock", {
-			from: player,
-			args: [],
-			log: true,
-			// ! Check if should to deploy different contract???
-			// skipIfAlreadyDeployed: false,
-		});
-
-		const ethPriceFeedMock = await deploy("MockV3Aggregator", {
-			from: deployer,
-			args: [DECIMALS, ETH_USD_PRICE],
-			log: true,
-		});
-		const btcPriceFeedMock = await deploy("MockV3Aggregator", {
-			from: player,
-			args: [DECIMALS, BTC_USD_PRICE],
-			log: true,
-			// skipIfAlreadyDeployed: false,
-		});
-
-		await deployments.save("EthERC20Mock", ethErc20Mock);
-		await deployments.save("BtcERC20Mock", btcErc20Mock);
-		await deployments.save("EthPriceFeedMock", ethPriceFeedMock);
-		await deployments.save("BtcPriceFeedMock", btcPriceFeedMock);
-		log("Mocks deployed!!!");
-		log("===============================================================");
-
-		wEthAddress = ethErc20Mock.address;
-		wBtcAddress = btcErc20Mock.address;
-		wEthPriceFeedAddress = ethPriceFeedMock.address;
-		wBtcPriceFeedAddress = btcPriceFeedMock.address;
+		wEthAddress = (await deployments.get("EthERC20Mock")).address;
+		wBtcAddress = (await deployments.get("BtcERC20Mock")).address;
+		wEthPriceFeedAddress = (await deployments.get("EthPriceFeedMock")).address;
+		wBtcPriceFeedAddress = (await deployments.get("BtcPriceFeedMock")).address;
 	} else {
 		wEthAddress = networkConfig[CHAIN_ID].wEthAddress;
 		wBtcAddress = networkConfig[CHAIN_ID].wBtcAddress;

@@ -13,29 +13,40 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 	const { deploy, log } = deployments;
 
 	if (developmentChains.includes(network.name)) {
-		// console.log("Local network detected! Deploying mocks...");
-		// const erc20MockETH = await deploy("ERC20Mock", {
-		// 	from: deployer,
-		// 	args: [],
-		// 	log: true,
-		// });
-		// const erc20MockBTC = await deploy("ERC20Mock", {
-		// 	from: deployer,
-		// 	args: [],
-		// 	log: true,
-		// });
-		// const ethPriceFeedMock = await deploy("MockV3Aggregator", {
-		// 	from: deployer,
-		// 	args: [DECIMALS, ETH_USD_PRICE],
-		// 	log: true,
-		// });
-		// const btcPriceFeedMock = await deploy("MockV3Aggregator", {
-		// 	from: deployer,
-		// 	args: [DECIMALS, BTC_USD_PRICE],
-		// 	log: true,
-		// });
-		// log("Mocks deployed!!!");
-		// log("===============================================================");
+		console.log("Local network detected! Deploying mocks...");
+		const ethErc20Mock = await deploy("ERC20Mock", {
+			from: deployer,
+			args: [],
+			log: true,
+		});
+		const btcErc20Mock = await deploy("ERC20Mock", {
+			from: deployer,
+			args: [],
+			log: true,
+			// ! Check if should to deploy different contract???
+			// skipIfAlreadyDeployed: false,
+		});
+		const ethPriceFeedMock = await deploy("MockV3Aggregator", {
+			from: deployer,
+			args: [DECIMALS, ETH_USD_PRICE],
+			log: true,
+		});
+		const btcPriceFeedMock = await deploy("MockV3Aggregator", {
+			from: deployer,
+			args: [DECIMALS, BTC_USD_PRICE],
+			log: true,
+		});
+		/**
+		 * ! Saving deployments of mocks so i can access them later in code,
+		 * ! Because they use same contracts for deployment
+		 */
+		await deployments.save("EthERC20Mock", ethErc20Mock);
+		await deployments.save("BtcERC20Mock", btcErc20Mock);
+		await deployments.save("EthPriceFeedMock", ethPriceFeedMock);
+		await deployments.save("BtcPriceFeedMock", btcPriceFeedMock);
+
+		log("Mocks deployed!!!");
+		log("===============================================================");
 	}
 };
 export default func;
