@@ -14,14 +14,15 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
 	if (developmentChains.includes(network.name)) {
 		console.log("Local network detected! Deploying mocks...");
+
 		const ethErc20Mock = await deploy("ERC20Mock", {
 			from: deployer,
-			args: [],
+			args: ["ethERC20Mock", "E20M"],
 			log: true,
 		});
 		const btcErc20Mock = await deploy("ERC20Mock", {
 			from: deployer,
-			args: [],
+			args: ["btcERC20Mock", "B20M"],
 			log: true,
 			// ! Check if should to deploy different contract???
 			// skipIfAlreadyDeployed: false,
