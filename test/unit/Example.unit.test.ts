@@ -104,7 +104,15 @@ const isDevelopmentChain = developmentChains.includes(network.name);
 					});
 
 					it("Revert if exceeds balance", async () => {
-						// TODO finish tests
+						await expect(stableCoin.burn(1)).to.be.revertedWithCustomError(
+							stableCoin,
+							"StableCoin__BurnAmountExceedsBalance",
+						);
+					});
+
+					it("Burns successfully", async () => {
+						// TODO
+						assert.equal(1, 1);
 					});
 				});
 
