@@ -9,7 +9,7 @@ import {
 	SCEngine,
 	StableCoin,
 } from "../../typechain-types";
-import { Deployment } from "hardhat-deploy/types";
+import { Address, Deployment } from "hardhat-deploy/types";
 
 const isDevelopmentChain = developmentChains.includes(network.name);
 
@@ -20,6 +20,10 @@ const isDevelopmentChain = developmentChains.includes(network.name);
 			const CHAIN_ID = network.config.chainId;
 			const MINT_AMOUNT = ethers.parseEther("1111");
 			const ONE_ETHER = ethers.parseEther("1");
+			let accounts: HardhatEthersSigner[];
+			let deployer: HardhatEthersSigner;
+			let player1: HardhatEthersSigner;
+			let player2: HardhatEthersSigner;
 
 			let ethErc20Mock: ERC20Mock;
 			let btcErc20Mock: ERC20Mock;
@@ -28,14 +32,17 @@ const isDevelopmentChain = developmentChains.includes(network.name);
 			let stableCoin: StableCoin;
 			let engine: SCEngine;
 
+			let mockAddresses: Address[];
+			let priceFeedMockAddresses: Address[];
+
 			beforeEach(async () => {
 				await deployments.fixture(["all"]);
 				// ! Test accounts provided by Hardhat
 				// TODO Add another named account and access them with getNamedSigners
-				const accounts: HardhatEthersSigner[] = await ethers.getSigners();
-				const deployer = accounts[0];
-				const player1 = accounts[1];
-				const player2 = accounts[2];
+				accounts = await ethers.getSigners();
+				deployer = accounts[0];
+				player1 = accounts[1];
+				player2 = accounts[2];
 				// ! Saved deployments from deploy script
 				const ethErc20MockDeployment: Deployment =
 					await deployments.get("EthERC20Mock");
@@ -66,6 +73,15 @@ const isDevelopmentChain = developmentChains.includes(network.name);
 				// ! Contracts
 				stableCoin = await ethers.getContract("StableCoin");
 				engine = await ethers.getContract("SCEngine");
+
+				mockAddresses = [
+					await ethErc20Mock.getAddress(),
+					await btcErc20Mock.getAddress(),
+				];
+				priceFeedMockAddresses = [
+					await ethPriceFeedMock.getAddress(),
+					await btcPriceFeedMock.getAddress(),
+				];
 			});
 
 			describe("StableCoin Initialization", () => {
@@ -119,20 +135,26 @@ const isDevelopmentChain = developmentChains.includes(network.name);
 					}
 				});
 				it("PriceFeed Test", async () => {
-					const mockAddresses = [
-						await ethErc20Mock.getAddress(),
-						await btcErc20Mock.getAddress(),
-					];
-					const priceFeedMockAddresses = [
-						await ethPriceFeedMock.getAddress(),
-						await btcPriceFeedMock.getAddress(),
-					];
 					for (let i = 0; i < mockAddresses.length; i++) {
 						assert.equal(
 							priceFeedMockAddresses[i],
 							await engine.getPriceFeedAddress(mockAddresses[i]),
 						);
 					}
+				});
+
+				it("Different length revert Test", async () => {
+					const SCEngine = await ethers.getContractFactory("SCEngine");
+					await expect(
+						SCEngine.deploy(
+							[mockAddresses[0]],
+							priceFeedMockAddresses,
+							await stableCoin.getAddress(),
+						),
+					).to.be.revertedWithCustomError(
+						SCEngine,
+						"SCEngine__TokenAddressesAndPriceFeedAddressesNotSameLength",
+					);
 				});
 			});
 		});
