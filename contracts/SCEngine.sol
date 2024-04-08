@@ -144,6 +144,18 @@ contract SCEngine is ReentrancyGuard {
     ////////////////////
     function getHealthFactor() external view {}
 
+    function getCollateralTokensAddresses() public view returns (address[] memory) {
+        return s_collateralTokens;
+    }
+
+    function getPriceFeedAddress(address _collateralToken) public view returns (address) {
+        return s_priceFeeds[_collateralToken];
+    }
+
+    function getSCAddress() public view returns (StableCoin) {
+        return i_sc;
+    }
+
     function getAccountCollateralValue(address _user) public view returns (uint256 collaterallValueInUSD) {
         for (uint256 i = 0; i < s_collateralTokens.length; i++) {
             address token = s_collateralTokens[i];

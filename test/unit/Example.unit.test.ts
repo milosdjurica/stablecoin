@@ -79,6 +79,7 @@ const isDevelopmentChain = developmentChains.includes(network.name);
 				});
 
 				describe("StableCoin Burn Tests", () => {
+					// ! This should revert OwnableUnauthorizedAccount - from notOwner modifier ???
 					it("Revert if 0 amount", async () => {
 						await expect(stableCoin.burn(0)).to.be.revertedWithCustomError(
 							stableCoin,
@@ -101,8 +102,37 @@ const isDevelopmentChain = developmentChains.includes(network.name);
 
 			describe("SCEngine Constructor Tests", () => {
 				it("StableCoin Address Test", async () => {
-					// TODO
-					assert.equal(1, 1);
+					assert.equal(
+						await engine.getSCAddress(),
+						await stableCoin.getAddress(),
+					);
+				});
+				it("Collateral Addresses Test", async () => {
+					const mockAddresses = [
+						await ethErc20Mock.getAddress(),
+						await btcErc20Mock.getAddress(),
+					];
+					const realContractAddresses =
+						await engine.getCollateralTokensAddresses();
+					for (let i = 0; i < mockAddresses.length; i++) {
+						assert.equal(realContractAddresses[i], mockAddresses[i]);
+					}
+				});
+				it("PriceFeed Test", async () => {
+					const mockAddresses = [
+						await ethErc20Mock.getAddress(),
+						await btcErc20Mock.getAddress(),
+					];
+					const priceFeedMockAddresses = [
+						await ethPriceFeedMock.getAddress(),
+						await btcPriceFeedMock.getAddress(),
+					];
+					for (let i = 0; i < mockAddresses.length; i++) {
+						assert.equal(
+							priceFeedMockAddresses[i],
+							await engine.getPriceFeedAddress(mockAddresses[i]),
+						);
+					}
 				});
 			});
 		});
