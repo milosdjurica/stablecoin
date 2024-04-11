@@ -4,6 +4,8 @@ export const developmentChains = ["hardhat", "localhost", "ganache"];
 export const DECIMALS = 8;
 export const ETH_USD_PRICE = 4000e8;
 export const BTC_USD_PRICE = 60000e8;
+export const PRECISION_18 = 1e18;
+export const PRECISION_8 = 1e8;
 
 export let networkConfig: NetworkConfig = {
 	// SEPOLIA

@@ -2,7 +2,13 @@ import { network, ethers, getNamedAccounts, deployments } from "hardhat";
 import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
 import { assert, expect } from "chai";
 
-import { developmentChains } from "../../utils/helper.config";
+import {
+	DECIMALS,
+	ETH_USD_PRICE,
+	PRECISION_18,
+	PRECISION_8,
+	developmentChains,
+} from "../../utils/helper.config";
 import {
 	ERC20Mock,
 	MockV3Aggregator,
@@ -163,6 +169,15 @@ const isDevelopmentChain = developmentChains.includes(network.name);
 						SCEngine,
 						"SCEngine__TokenAddressesAndPriceFeedAddressesNotSameLength",
 					);
+				});
+			});
+			describe("getUSDValue Tests", () => {
+				it("", async () => {
+					const TEN_ETHER = parseInt(ONE_ETHER.toString()) * 10;
+					const expectedValue =
+						(TEN_ETHER * ETH_USD_PRICE) / PRECISION_18 / PRECISION_8;
+					const amount = await engine.getUSDValue(ethErc20Mock, 10);
+					assert.equal(amount, BigInt(expectedValue));
 				});
 			});
 		});
