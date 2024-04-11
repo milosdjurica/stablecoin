@@ -156,6 +156,14 @@ contract SCEngine is ReentrancyGuard {
         return i_sc;
     }
 
+    function getOneCollateralDeposited(address _user, address _tokenAddress)
+        public
+        view
+        returns (uint256 collateralDeposited)
+    {
+        return s_collateralDeposited[_user][_tokenAddress];
+    }
+
     function getAccountCollateralValueInUSD(address _user) public view returns (uint256 collaterallValueInUSD) {
         for (uint256 i = 0; i < s_collateralTokens.length; i++) {
             address token = s_collateralTokens[i];

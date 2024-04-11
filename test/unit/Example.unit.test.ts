@@ -242,30 +242,31 @@ const isDevelopmentChain = developmentChains.includes(network.name);
 						);
 				});
 
-				// it("Adds collateral to s_collateralDeposited", async () => {
-				// 	ethErc20Mock.mint(deployer, MINT_AMOUNT);
-				// 	await ethErc20Mock.approve(engine, ONE_ETHER);
-
-				// 	await engine.depositCollateral(ethErc20Mock, ONE_ETHER);
-				// 	const accCollateralValueInUSD =
-				// 		await engine.getAccountCollateralValueInUSD(deployer);
-
-				// 	console.log("accCollateralValueInUSD", accCollateralValueInUSD);
-
-				// 	assert.equal(ONE_ETHER, accCollateralValueInUSD);
-				// });
+				it("Adds collateral to s_collateralDeposited", async () => {
+					ethErc20Mock.mint(deployer, MINT_AMOUNT);
+					await ethErc20Mock.approve(engine, ONE_ETHER);
+					await engine.depositCollateral(ethErc20Mock, ONE_ETHER);
+					assert.equal(
+						ONE_ETHER,
+						await engine.getOneCollateralDeposited(
+							deployer,
+							await ethErc20Mock.getAddress(),
+						),
+					);
+				});
 			});
 
-			// describe("getAccountCollateralValue tests", () => {
-			// 	it("calculates ETH test", async () => {
-			// 		// ! Give tokens to player
-			// 		ethErc20Mock.mint(player1, MINT_AMOUNT);
-			// 		// ! Give approval to the engine
-			// 		ethErc20Mock.approve(engine, BigInt(11) * ONE_ETHER);
-			// 		await engine.depositCollateral(ethErc20Mock, BigInt(10) * ONE_ETHER);
-			// 		const accValue = await engine.getAccountCollateralValue(deployer);
-			// 		console.log(accValue);
-			// 		expect(accValue).to.equal(10);
-			// 	});
-			// });
+			describe("getAccountCollateralValue tests", () => {
+				it("calculates ETH test", async () => {
+					ethErc20Mock.mint(deployer, MINT_AMOUNT);
+					await ethErc20Mock.approve(engine, ONE_ETHER);
+
+					await engine.depositCollateral(ethErc20Mock, ONE_ETHER);
+					const accCollateralValueInUSD =
+						await engine.getAccountCollateralValueInUSD(deployer);
+					const ONE_ETHER_IN_USD =
+						(ONE_ETHER * BigInt(ETH_USD_PRICE)) / BigInt(PRECISION_8);
+					assert.equal(ONE_ETHER_IN_USD, accCollateralValueInUSD);
+				});
+			});
 		});
