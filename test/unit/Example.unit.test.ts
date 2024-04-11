@@ -91,7 +91,8 @@ const isDevelopmentChain = developmentChains.includes(network.name);
 				];
 			});
 
-			describe("StableCoin Initialization", () => {
+			// ! TESTS FOR StableCoin.sol
+			describe("StableCoin", () => {
 				it("Initializes correctly", async () => {
 					const SC_NAME = await stableCoin.name();
 					const SC_SYMBOL = await stableCoin.symbol();
@@ -131,13 +132,15 @@ const isDevelopmentChain = developmentChains.includes(network.name);
 				});
 			});
 
-			describe("SCEngine Constructor Tests", () => {
+			// ! TESTS FOR SCEngine.sol
+			describe("SCEngine Initialization Tests", () => {
 				it("StableCoin Address Test", async () => {
 					assert.equal(
 						await engine.getSCAddress(),
 						await stableCoin.getAddress(),
 					);
 				});
+
 				it("Collateral Addresses Test", async () => {
 					const mockAddresses = [
 						await ethErc20Mock.getAddress(),
@@ -149,6 +152,7 @@ const isDevelopmentChain = developmentChains.includes(network.name);
 						assert.equal(realContractAddresses[i], mockAddresses[i]);
 					}
 				});
+
 				it("PriceFeed Test", async () => {
 					for (let i = 0; i < mockAddresses.length; i++) {
 						assert.equal(
@@ -172,6 +176,7 @@ const isDevelopmentChain = developmentChains.includes(network.name);
 					);
 				});
 			});
+
 			describe("getUSDValue Tests", () => {
 				it("ETH_ERC20Mock test", async () => {
 					const TEN_ETHER = parseInt(ONE_ETHER.toString()) * 10;
@@ -189,4 +194,78 @@ const isDevelopmentChain = developmentChains.includes(network.name);
 					assert.equal(amount, BigInt(expectedValue));
 				});
 			});
+
+			describe("depositCollateral tests", () => {
+				it("Should Revert if 0 amount", async () => {
+					await expect(
+						engine.depositCollateral(ethErc20Mock, 0),
+					).to.be.revertedWithCustomError(
+						engine,
+						"SCEngine__NeedsMoreThanZero",
+					);
+				});
+
+				it("Reverts if user doesn't have enough wETH balance", async () => {
+					await ethErc20Mock.approve(engine, ONE_ETHER);
+					await expect(engine.depositCollateral(ethErc20Mock, ONE_ETHER))
+						.to.be.revertedWithCustomError(
+							ethErc20Mock,
+							"ERC20InsufficientBalance",
+						)
+						// ! Sender, balance of sender, amount to transfer
+						.withArgs(deployer, 0, ONE_ETHER);
+				});
+
+				it("Reverts if user doesn't approve engine contract", async () => {
+					await expect(engine.depositCollateral(ethErc20Mock, ONE_ETHER))
+						.to.be.revertedWithCustomError(
+							ethErc20Mock,
+							"ERC20InsufficientAllowance",
+						)
+						.withArgs(await engine.getAddress(), 0, ONE_ETHER);
+				});
+
+				it("Reverts if engine tries to deposit more than allowed", async () => {
+					ethErc20Mock.mint(deployer, MINT_AMOUNT);
+					await ethErc20Mock.approve(engine, ONE_ETHER);
+					await expect(
+						engine.depositCollateral(ethErc20Mock, BigInt(2) * ONE_ETHER),
+					)
+						.to.be.revertedWithCustomError(
+							ethErc20Mock,
+							"ERC20InsufficientAllowance",
+						)
+						.withArgs(
+							await engine.getAddress(),
+							ONE_ETHER,
+							BigInt(2) * ONE_ETHER,
+						);
+				});
+
+				// it("Adds collateral to s_collateralDeposited", async () => {
+				// 	ethErc20Mock.mint(deployer, MINT_AMOUNT);
+				// 	await ethErc20Mock.approve(engine, ONE_ETHER);
+
+				// 	await engine.depositCollateral(ethErc20Mock, ONE_ETHER);
+				// 	const accCollateralValueInUSD =
+				// 		await engine.getAccountCollateralValueInUSD(deployer);
+
+				// 	console.log("accCollateralValueInUSD", accCollateralValueInUSD);
+
+				// 	assert.equal(ONE_ETHER, accCollateralValueInUSD);
+				// });
+			});
+
+			// describe("getAccountCollateralValue tests", () => {
+			// 	it("calculates ETH test", async () => {
+			// 		// ! Give tokens to player
+			// 		ethErc20Mock.mint(player1, MINT_AMOUNT);
+			// 		// ! Give approval to the engine
+			// 		ethErc20Mock.approve(engine, BigInt(11) * ONE_ETHER);
+			// 		await engine.depositCollateral(ethErc20Mock, BigInt(10) * ONE_ETHER);
+			// 		const accValue = await engine.getAccountCollateralValue(deployer);
+			// 		console.log(accValue);
+			// 		expect(accValue).to.equal(10);
+			// 	});
+			// });
 		});

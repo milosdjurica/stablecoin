@@ -156,7 +156,7 @@ contract SCEngine is ReentrancyGuard {
         return i_sc;
     }
 
-    function getAccountCollateralValue(address _user) public view returns (uint256 collaterallValueInUSD) {
+    function getAccountCollateralValueInUSD(address _user) public view returns (uint256 collaterallValueInUSD) {
         for (uint256 i = 0; i < s_collateralTokens.length; i++) {
             address token = s_collateralTokens[i];
             uint256 amount = s_collateralDeposited[_user][token];
@@ -199,6 +199,6 @@ contract SCEngine is ReentrancyGuard {
         returns (uint256 totalSCMinted, uint256 collateralValueInUSD)
     {
         totalSCMinted = s_SCMinted[user];
-        collateralValueInUSD = getAccountCollateralValue(user);
+        collateralValueInUSD = getAccountCollateralValueInUSD(user);
     }
 }
