@@ -254,6 +254,15 @@ const isDevelopmentChain = developmentChains.includes(network.name);
 						),
 					);
 				});
+
+				it("Emits the event", async () => {
+					// emit CollateralDeposited(msg.sender, _tokenCollateralAddress, _amountCollateral);
+					ethErc20Mock.mint(deployer, ONE_ETHER);
+					await ethErc20Mock.approve(engine, ONE_ETHER);
+					await expect(await engine.depositCollateral(ethErc20Mock, ONE_ETHER))
+						.to.emit(engine, "CollateralDeposited")
+						.withArgs(deployer, ethErc20Mock, ONE_ETHER);
+				});
 			});
 
 			describe("getAccountCollateralValue tests", () => {
