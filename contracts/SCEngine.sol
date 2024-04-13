@@ -52,6 +52,7 @@ contract SCEngine is ReentrancyGuard {
     // * Events 	  //
     ////////////////////
     event CollateralDeposited(address indexed user, address indexed tokenAddress, uint256 indexed amount);
+    event CollateralRedeemed(address indexed user, address indexed tokenAddress, uint256 indexed amount);
 
     ////////////////////
     // * Modifiers 	  //
@@ -114,6 +115,10 @@ contract SCEngine is ReentrancyGuard {
     {
         // ! Should check if can subtract?
         s_collateralDeposited[msg.sender][_tokenCollateralAddress] -= _amountCollateral;
+        emit CollateralRedeemed(msg.sender, _tokenCollateralAddress, _amountCollateral);
+        bool success = IERC20(_tokenCollateralAddress).transfer(msg.sender, _amountCollateral);
+        if (!success) revert SCEngine__TransferFailed();
+        _revertIfHealthFactorIsBroken(msg.sender);
     }
 
     function redeemCollateral() external {}
