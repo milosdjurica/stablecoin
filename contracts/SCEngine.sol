@@ -30,6 +30,7 @@ contract SCEngine is ReentrancyGuard {
     error SCEngine__BreaksHealthFactor(uint256 userHealthFactor);
     error SC__MintFailed();
     error SCEngine__HealthFactorIsFine();
+    error SCEngine__HealthFactorNotImproved();
 
     ////////////////////
     // * Types 		  //
@@ -132,7 +133,14 @@ contract SCEngine is ReentrancyGuard {
         // ! And give 10% bonus
         uint256 bonusCollateral = tokenAmountFromDebtCovered * LIQUIDATION_BONUS / LIQUIDATION_PRECISION;
         uint256 totalCollateralWithBonus = tokenAmountFromDebtCovered + bonusCollateral;
-        _redeemCollateral(_user, msg.sender, _collateral, totalCollateralWithBonus);
+        _redeemCollateral(_collateral, totalCollateralWithBonus, _user, msg.sender);
+        _burnSC(_debtToCover, _user, msg.sender);
+
+        // ! Doing check after transfering tokens, trade-off -> can also check before but it is not gas efficient
+        uint256 endingUserHealthFactor = _healthFactor(_user);
+        if (endingUserHealthFactor < MIN_HEALTH_FACTOR) revert SCEngine__HealthFactorNotImproved();
+        // ! Is this necessary???
+        _revertIfHealthFactorIsBroken(msg.sender);
     }
 
     ////////////////////
@@ -167,10 +175,7 @@ contract SCEngine is ReentrancyGuard {
     }
 
     function burnSC(uint256 _amountToBurn) public moreThanZero(_amountToBurn) {
-        s_SCMinted[msg.sender] -= _amountToBurn;
-        bool success = i_sc.transferFrom(msg.sender, address(this), _amountToBurn);
-        if (!success) revert SCEngine__TransferFailed();
-        i_sc.burn(_amountToBurn);
+        _burnSC(_amountToBurn, msg.sender, msg.sender);
         // ! Probably dont really need this line
         _revertIfHealthFactorIsBroken(msg.sender);
     }
@@ -180,7 +185,7 @@ contract SCEngine is ReentrancyGuard {
         moreThanZero(_amountCollateral)
         nonReentrant
     {
-        _redeemCollateral(msg.sender, msg.sender, _tokenCollateralAddress, _amountCollateral);
+        _redeemCollateral(_tokenCollateralAddress, _amountCollateral, msg.sender, msg.sender);
         _revertIfHealthFactorIsBroken(msg.sender);
     }
 
@@ -191,13 +196,22 @@ contract SCEngine is ReentrancyGuard {
     ////////////////////
     // * Private 	  //
     ////////////////////
+    // ! Internal function, not checking health factor here,
+    // ! should be checked in functions that call this function
     function _redeemCollateral(address _tokenCollateralAddress, uint256 _amountCollateral, address _from, address _to)
         private
     {
         s_collateralDeposited[_from][_tokenCollateralAddress] -= _amountCollateral;
         emit CollateralRedeemed(_from, _to, _tokenCollateralAddress, _amountCollateral);
-        bool success = IERC20(_tokenCollateralAddress).transfer(to, _amountCollateral);
+        bool success = IERC20(_tokenCollateralAddress).transfer(_to, _amountCollateral);
         if (!success) revert SCEngine__TransferFailed();
+    }
+
+    function _burnSC(uint256 _amountToBurn, address _ownerOfSC, address _whoIsBurning) private {
+        s_SCMinted[_ownerOfSC] -= _amountToBurn;
+        bool success = i_sc.transferFrom(_whoIsBurning, address(this), _amountToBurn);
+        if (!success) revert SCEngine__TransferFailed();
+        i_sc.burn(_amountToBurn);
     }
 
     ////////////////////
