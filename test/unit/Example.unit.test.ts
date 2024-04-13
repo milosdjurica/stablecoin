@@ -17,6 +17,7 @@ import {
 	StableCoin,
 } from "../../typechain-types";
 import { Address, Deployment } from "hardhat-deploy/types";
+import { ZeroAddress } from "ethers";
 
 const isDevelopmentChain = developmentChains.includes(network.name);
 
@@ -203,6 +204,12 @@ const isDevelopmentChain = developmentChains.includes(network.name);
 						engine,
 						"SCEngine__NeedsMoreThanZero",
 					);
+				});
+
+				it("Should revert if token not allowed", async () => {
+					await expect(engine.depositCollateral(ZeroAddress, ONE_ETHER))
+						.to.be.revertedWithCustomError(engine, "SCEngine__NotAllowedToken")
+						.withArgs(ZeroAddress);
 				});
 
 				it("Reverts if user doesn't have enough wETH balance", async () => {
