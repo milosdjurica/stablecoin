@@ -91,13 +91,47 @@ contract SCEngine is ReentrancyGuard {
     ////////////////////
     // * External 	  //
     ////////////////////
+
+    /**
+     *
+     * @param _tokenCollateralAddress Address of ERC20 Token for collateral
+     * @param _amountCollateral Amount of collateral to deposit
+     * @param _amountSCToMint Amount of StableCoin to mint
+     */
+    function depositCollateralAndMintSC(
+        address _tokenCollateralAddress,
+        uint256 _amountCollateral,
+        uint256 _amountSCToMint
+    ) external {
+        depositCollateral(_tokenCollateralAddress, _amountCollateral);
+        mintSC(_amountSCToMint);
+    }
+
+    function redeemCollateralForSC(address _tokenCollateralAddress, uint256 _amountCollateral)
+        external
+        moreThanZero(_amountCollateral)
+        nonReentrant
+    {
+        // ! Should check if can subtract?
+        s_collateralDeposited[msg.sender][_tokenCollateralAddress] -= _amountCollateral;
+    }
+
+    function redeemCollateral() external {}
+
+    function burnSC() external {}
+
+    function liquidate() external {}
+
+    ////////////////////
+    // * Public 	  //
+    ////////////////////
     /**
      *
      * @param _tokenCollateralAddress The address of the token to be deposited as collateral
      * @param _amountCollateral The amount of collateral to deposit
      */
     function depositCollateral(address _tokenCollateralAddress, uint256 _amountCollateral)
-        external
+        public
         moreThanZero(_amountCollateral)
         isAllowedToken(_tokenCollateralAddress)
         nonReentrant
@@ -112,24 +146,12 @@ contract SCEngine is ReentrancyGuard {
      *
      * @param amountSCToMint Amount of Stablecoin to mint
      */
-    function mintSC(uint256 amountSCToMint) external moreThanZero(amountSCToMint) nonReentrant {
+    function mintSC(uint256 amountSCToMint) public moreThanZero(amountSCToMint) nonReentrant {
         s_SCMinted[msg.sender] += amountSCToMint;
         _revertIfHealthFactorIsBroken(msg.sender);
         bool minted = i_sc.mint(msg.sender, amountSCToMint);
         if (!minted) revert SC__MintFailed();
     }
-
-    function redeemCollateralForSC() external {}
-
-    function redeemCollateral() external {}
-
-    function burnSC() external {}
-
-    function liquidate() external {}
-
-    ////////////////////
-    // * Public 	  //
-    ////////////////////
 
     ////////////////////
     // * Internal 	  //
