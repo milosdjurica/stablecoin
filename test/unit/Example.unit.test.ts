@@ -180,19 +180,17 @@ const isDevelopmentChain = developmentChains.includes(network.name);
 
 			describe("getUSDValue Tests", () => {
 				it("ETH_ERC20Mock test", async () => {
-					const TEN_ETHER = parseInt(ONE_ETHER.toString()) * 10;
-					const expectedValue =
-						(TEN_ETHER * ETH_USD_PRICE) / PRECISION_18 / PRECISION_8;
-					const amount = await engine.getUSDValue(ethErc20Mock, 10);
-					assert.equal(amount, BigInt(expectedValue));
+					const AMOUNT = 10;
+					const expectedValue = (AMOUNT * ETH_USD_PRICE) / PRECISION_8;
+					const realValue = await engine.getUSDValue(ethErc20Mock, AMOUNT);
+					assert.equal(realValue, BigInt(expectedValue));
 				});
 
 				it("BTC_ERC20Mock test", async () => {
-					const TEN_ETHER = parseInt(ONE_ETHER.toString()) * 10;
-					const expectedValue =
-						(TEN_ETHER * BTC_USD_PRICE) / PRECISION_18 / PRECISION_8;
-					const amount = await engine.getUSDValue(btcErc20Mock, 10);
-					assert.equal(amount, BigInt(expectedValue));
+					const AMOUNT = 10;
+					const expectedValue = (AMOUNT * BTC_USD_PRICE) / PRECISION_8;
+					const realValue = await engine.getUSDValue(btcErc20Mock, AMOUNT);
+					assert.equal(realValue, BigInt(expectedValue));
 				});
 			});
 

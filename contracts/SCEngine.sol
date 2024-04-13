@@ -45,6 +45,7 @@ contract SCEngine is ReentrancyGuard {
     uint256 private constant LIQUIDATION_PRECISION = 100;
     uint256 private constant LIQUIDATION_BONUS = 10; // ! 10% bonus
     uint256 private constant MIN_HEALTH_FACTOR = 1e18;
+
     StableCoin private immutable i_sc;
     mapping(address token => address priceFeed) private s_priceFeeds;
     mapping(address user => mapping(address token => uint256 amount)) private s_collateralDeposited;
