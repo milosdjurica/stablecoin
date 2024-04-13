@@ -108,22 +108,14 @@ contract SCEngine is ReentrancyGuard {
         mintSC(_amountSCToMint);
     }
 
-    function redeemCollateralForSC(address _tokenCollateralAddress, uint256 _amountCollateral)
-        external
-        moreThanZero(_amountCollateral)
-        nonReentrant
-    {
-        // ! Should check if can subtract?
-        s_collateralDeposited[msg.sender][_tokenCollateralAddress] -= _amountCollateral;
-        emit CollateralRedeemed(msg.sender, _tokenCollateralAddress, _amountCollateral);
-        bool success = IERC20(_tokenCollateralAddress).transfer(msg.sender, _amountCollateral);
-        if (!success) revert SCEngine__TransferFailed();
-        _revertIfHealthFactorIsBroken(msg.sender);
+    function burnSCAndRedeemCollateral(
+        address _tokenCollateralAddress,
+        uint256 _amountCollateral,
+        uint256 _amountSCToBurn
+    ) external {
+        burnSC(_amountSCToBurn);
+        redeemCollateral(_tokenCollateralAddress, _amountCollateral);
     }
-
-    function redeemCollateral() external {}
-
-    function burnSC() external {}
 
     function liquidate() external {}
 
@@ -156,6 +148,28 @@ contract SCEngine is ReentrancyGuard {
         _revertIfHealthFactorIsBroken(msg.sender);
         bool minted = i_sc.mint(msg.sender, amountSCToMint);
         if (!minted) revert SC__MintFailed();
+    }
+
+    function burnSC(uint256 _amountToBurn) public moreThanZero(_amountToBurn) {
+        s_SCMinted[msg.sender] -= _amountToBurn;
+        bool success = i_sc.transferFrom(msg.sender, address(this), _amountToBurn);
+        if (!success) revert SCEngine__TransferFailed();
+        i_sc.burn(_amountToBurn);
+        // ! Probably dont really need this line
+        _revertIfHealthFactorIsBroken(msg.sender);
+    }
+
+    function redeemCollateral(address _tokenCollateralAddress, uint256 _amountCollateral)
+        public
+        moreThanZero(_amountCollateral)
+        nonReentrant
+    {
+        // ! Should check if can subtract?
+        s_collateralDeposited[msg.sender][_tokenCollateralAddress] -= _amountCollateral;
+        emit CollateralRedeemed(msg.sender, _tokenCollateralAddress, _amountCollateral);
+        bool success = IERC20(_tokenCollateralAddress).transfer(msg.sender, _amountCollateral);
+        if (!success) revert SCEngine__TransferFailed();
+        _revertIfHealthFactorIsBroken(msg.sender);
     }
 
     ////////////////////
