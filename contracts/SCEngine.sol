@@ -29,6 +29,7 @@ contract SCEngine is ReentrancyGuard {
     error SCEngine__TransferFailed();
     error SCEngine__BreaksHealthFactor(uint256 userHealthFactor);
     error SC__MintFailed();
+    error SCEngine__HealthFactorIsFine();
 
     ////////////////////
     // * Types 		  //
@@ -41,7 +42,8 @@ contract SCEngine is ReentrancyGuard {
     uint256 private constant PRECISION_18 = 10e18;
     uint256 private constant LIQUIDATION_THRESHOLD = 50;
     uint256 private constant LIQUIDATION_PRECISION = 100;
-    uint256 private constant MIN_HEALTH_FACTOR = 1;
+    uint256 private constant LIQUIDATION_BONUS = 10; // ! 10% bonus
+    uint256 private constant MIN_HEALTH_FACTOR = 1e18;
     StableCoin private immutable i_sc;
     mapping(address token => address priceFeed) private s_priceFeeds;
     mapping(address user => mapping(address token => uint256 amount)) private s_collateralDeposited;
@@ -52,7 +54,9 @@ contract SCEngine is ReentrancyGuard {
     // * Events 	  //
     ////////////////////
     event CollateralDeposited(address indexed user, address indexed tokenAddress, uint256 indexed amount);
-    event CollateralRedeemed(address indexed user, address indexed tokenAddress, uint256 indexed amount);
+    event CollateralRedeemed(
+        address indexed redeemedFrom, address indexed redeemedTo, address indexed tokenAddress, uint256 amount
+    );
 
     ////////////////////
     // * Modifiers 	  //
@@ -117,7 +121,19 @@ contract SCEngine is ReentrancyGuard {
         redeemCollateral(_tokenCollateralAddress, _amountCollateral);
     }
 
-    function liquidate() external {}
+    function liquidate(address _collateral, address _user, uint256 _debtToCover)
+        external
+        moreThanZero(_debtToCover)
+        nonReentrant
+    {
+        uint256 startingUserHealthFactor = _healthFactor(_user);
+        if (startingUserHealthFactor >= MIN_HEALTH_FACTOR) revert SCEngine__HealthFactorIsFine();
+        uint256 tokenAmountFromDebtCovered = getTokenAmountFromUSD(_collateral, _debtToCover);
+        // ! And give 10% bonus
+        uint256 bonusCollateral = tokenAmountFromDebtCovered * LIQUIDATION_BONUS / LIQUIDATION_PRECISION;
+        uint256 totalCollateralWithBonus = tokenAmountFromDebtCovered + bonusCollateral;
+        _redeemCollateral(_user, msg.sender, _collateral, totalCollateralWithBonus);
+    }
 
     ////////////////////
     // * Public 	  //
@@ -164,11 +180,7 @@ contract SCEngine is ReentrancyGuard {
         moreThanZero(_amountCollateral)
         nonReentrant
     {
-        // ! Should check if can subtract?
-        s_collateralDeposited[msg.sender][_tokenCollateralAddress] -= _amountCollateral;
-        emit CollateralRedeemed(msg.sender, _tokenCollateralAddress, _amountCollateral);
-        bool success = IERC20(_tokenCollateralAddress).transfer(msg.sender, _amountCollateral);
-        if (!success) revert SCEngine__TransferFailed();
+        _redeemCollateral(msg.sender, msg.sender, _tokenCollateralAddress, _amountCollateral);
         _revertIfHealthFactorIsBroken(msg.sender);
     }
 
@@ -179,11 +191,26 @@ contract SCEngine is ReentrancyGuard {
     ////////////////////
     // * Private 	  //
     ////////////////////
+    function _redeemCollateral(address _tokenCollateralAddress, uint256 _amountCollateral, address _from, address _to)
+        private
+    {
+        s_collateralDeposited[_from][_tokenCollateralAddress] -= _amountCollateral;
+        emit CollateralRedeemed(_from, _to, _tokenCollateralAddress, _amountCollateral);
+        bool success = IERC20(_tokenCollateralAddress).transfer(to, _amountCollateral);
+        if (!success) revert SCEngine__TransferFailed();
+    }
 
     ////////////////////
     // * View & Pure  //
     ////////////////////
     function getHealthFactor() external view {}
+
+    function getTokenAmountFromUSD(address _collateral, uint256 _USDAmountInWei) public view returns (uint256) {
+        AggregatorV3Interface priceFeed = AggregatorV3Interface(s_priceFeeds[_collateral]);
+        (, int256 price,,,) = priceFeed.latestRoundData();
+        // ($1000e18 * 1e18) / ($2000e8 * 1e10) = 0.500 000 000 000 000 000
+        return (_USDAmountInWei * PRECISION_18) / (uint256(price) * ADDITIONAL_FEED_PRECISION_10);
+    }
 
     function getCollateralTokensAddresses() public view returns (address[] memory) {
         return s_collateralTokens;
