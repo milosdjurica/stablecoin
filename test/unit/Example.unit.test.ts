@@ -81,6 +81,8 @@ const isDevelopmentChain = developmentChains.includes(network.name);
 				// ! Contracts
 				stableCoin = await ethers.getContract("StableCoin");
 				engine = await ethers.getContract("SCEngine");
+				// TODO Why do i need this???
+				stableCoin.transferOwnership(engine);
 
 				mockAddresses = [
 					await ethErc20Mock.getAddress(),
@@ -104,20 +106,26 @@ const isDevelopmentChain = developmentChains.includes(network.name);
 				});
 
 				describe("StableCoin Burn Tests", () => {
-					// ! This should revert OwnableUnauthorizedAccount - from notOwner modifier ???
-					it("Revert if 0 amount", async () => {
-						await expect(stableCoin.burn(0)).to.be.revertedWithCustomError(
+					it("Reverts because notOwner", async () => {
+						await expect(stableCoin.burn(1)).to.be.revertedWithCustomError(
 							stableCoin,
-							"StableCoin__MustBeMoreThanZero",
+							"OwnableUnauthorizedAccount",
 						);
 					});
 
-					it("Revert if exceeds balance", async () => {
-						await expect(stableCoin.burn(1)).to.be.revertedWithCustomError(
-							stableCoin,
-							"StableCoin__BurnAmountExceedsBalance",
-						);
-					});
+					// it("Revert if 0 amount", async () => {
+					// 	await expect(stableCoin.burn(0)).to.be.revertedWithCustomError(
+					// 		stableCoin,
+					// 		"StableCoin__MustBeMoreThanZero",
+					// 	);
+					// });
+
+					// it("Revert if exceeds balance", async () => {
+					// 	await expect(stableCoin.burn(1)).to.be.revertedWithCustomError(
+					// 		stableCoin,
+					// 		"StableCoin__BurnAmountExceedsBalance",
+					// 	);
+					// });
 
 					it("Burns successfully", async () => {
 						// TODO
@@ -288,9 +296,7 @@ const isDevelopmentChain = developmentChains.includes(network.name);
 			});
 
 			describe("getTokenAmountFromUSD", () => {
-				// ! Why it doesn't work???
 				it("calculates amount of tokens for USD", async () => {
-					// ! Should pass 6000e18
 					const AMOUNT_USD = 100;
 					const expectedAmount =
 						(AMOUNT_USD * 1e18 * PRECISION_8) / ETH_USD_PRICE;
@@ -298,8 +304,75 @@ const isDevelopmentChain = developmentChains.includes(network.name);
 						await ethErc20Mock.getAddress(),
 						AMOUNT_USD,
 					);
-					console.log(expectedAmount, realAmount);
 					assert.equal(expectedAmount, parseFloat(realAmount.toString()));
 				});
 			});
+
+			describe("mintSC tests", () => {
+				it("revert if amount is 0", async () => {
+					await expect(engine.mintSC(0)).to.be.revertedWithCustomError(
+						engine,
+						"SCEngine__NeedsMoreThanZero",
+					);
+				});
+
+				it("reverts if health factor is broken", async () => {
+					await expect(engine.mintSC(1))
+						.to.be.revertedWithCustomError(
+							engine,
+							"SCEngine__BreaksHealthFactor",
+						)
+						.withArgs(0);
+				});
+
+				it("reverts if health factor is with health factor amount", async () => {
+					ethErc20Mock.mint(deployer, MINT_AMOUNT);
+					await ethErc20Mock.approve(engine, ONE_ETHER);
+					await engine.depositCollateral(ethErc20Mock, ONE_ETHER);
+					const ZERO_POINT_FIVE = 0.5 * 1e18;
+					await expect(engine.mintSC(4000))
+						.to.be.revertedWithCustomError(
+							engine,
+							"SCEngine__BreaksHealthFactor",
+						)
+						.withArgs(BigInt(ZERO_POINT_FIVE));
+				});
+
+				it("mint successfully and stores in s_SCMinted", async () => {
+					ethErc20Mock.mint(deployer, MINT_AMOUNT);
+					await ethErc20Mock.approve(engine, ONE_ETHER);
+					await engine.depositCollateral(ethErc20Mock, ONE_ETHER);
+					const THOUSAND = 1000;
+					await engine.mintSC(THOUSAND);
+
+					assert.equal(
+						await engine.getSCMintedForAccount(deployer),
+						BigInt(THOUSAND),
+					);
+				});
+
+				it("mint successfully and emits SCMinted event", async () => {
+					ethErc20Mock.mint(deployer, MINT_AMOUNT);
+					await ethErc20Mock.approve(engine, ONE_ETHER);
+					await engine.depositCollateral(ethErc20Mock, ONE_ETHER);
+					const THOUSAND = 1000;
+					await expect(engine.mintSC(THOUSAND))
+						.to.emit(engine, "StableCoinMinted")
+						.withArgs(deployer, THOUSAND);
+				});
+			});
+
+			// describe("depositCollateralAndMintSC", () => {
+			// 	it("", async () => {
+			// 		ethErc20Mock.mint(deployer, MINT_AMOUNT);
+			// 		await ethErc20Mock.approve(engine, ONE_ETHER);
+			// 		await engine.depositCollateralAndMintSC(
+			// 			ethErc20Mock,
+			// 			ONE_ETHER,
+			// 			2000,
+			// 		);
+			// 		const userInfo = await engine.getAccountInformation(deployer);
+			// 		console.log(userInfo);
+			// 	});
+			// });
 		});

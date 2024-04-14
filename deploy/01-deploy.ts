@@ -50,6 +50,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 		deployer,
 	);
 
+	// TODO Does this work and why shows different in tests???
 	stableCoin.transferOwnership(scEngine.address);
 };
 export default func;

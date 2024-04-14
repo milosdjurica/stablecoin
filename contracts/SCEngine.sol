@@ -59,6 +59,7 @@ contract SCEngine is ReentrancyGuard {
     event CollateralRedeemed(
         address indexed redeemedFrom, address indexed redeemedTo, address indexed tokenAddress, uint256 amount
     );
+    event StableCoinMinted(address indexed user, uint256 indexed amount);
 
     ////////////////////
     // * Modifiers 	  //
@@ -166,12 +167,14 @@ contract SCEngine is ReentrancyGuard {
 
     /**
      *
-     * @param amountSCToMint Amount of Stablecoin to mint
+     * @param _amountSCToMint Amount of Stablecoin to mint
      */
-    function mintSC(uint256 amountSCToMint) public moreThanZero(amountSCToMint) nonReentrant {
-        s_SCMinted[msg.sender] += amountSCToMint;
+    function mintSC(uint256 _amountSCToMint) public moreThanZero(_amountSCToMint) nonReentrant {
+        s_SCMinted[msg.sender] += _amountSCToMint;
+        // ! Do i need to emit, or it emits automatically from ERC20 contract?
+        emit StableCoinMinted(msg.sender, _amountSCToMint);
         _revertIfHealthFactorIsBroken(msg.sender);
-        bool minted = i_sc.mint(msg.sender, amountSCToMint);
+        bool minted = i_sc.mint(msg.sender, _amountSCToMint);
         if (!minted) revert SC__MintFailed();
     }
 
@@ -218,6 +221,20 @@ contract SCEngine is ReentrancyGuard {
     ////////////////////
     // * View & Pure  //
     ////////////////////
+    function calculateHealthFactor(uint256 _totalSCMinted, uint256 _collateralValueInUSD)
+        public
+        pure
+        returns (uint256)
+    {
+        // [ 4000n, 4000000000000000000000n ]
+        if (_totalSCMinted == 0) return type(uint256).max;
+        // ! Basically this line just divides with 2, because we need to have more than 2x collateral than SC
+        uint256 collateralAdjustedForThreshold = (_collateralValueInUSD * LIQUIDATION_THRESHOLD) / LIQUIDATION_PRECISION;
+        // 2000000000000000000000n * 1e18 / 4000
+        // ! Changed -> return collateralAdjustedForThreshold * PRECISION_18 / totalSCMinted;
+        return collateralAdjustedForThreshold / _totalSCMinted;
+    }
+
     function getTokenAmountFromUSD(address _collateral, uint256 _USDAmount) public view returns (uint256) {
         AggregatorV3Interface priceFeed = AggregatorV3Interface(s_priceFeeds[_collateral]);
         (, int256 price,,,) = priceFeed.latestRoundData();
@@ -269,7 +286,6 @@ contract SCEngine is ReentrancyGuard {
     function _healthFactor(address _user) internal view returns (uint256) {
         (uint256 totalSCMinted, uint256 collateralValueInUSD) = _getAccountInformation(_user);
         // ! must have 2x collaretral value than SC
-
         // ! Bad example
         // $150 ETH / 100 SC = 1.5
         // 150*50 = 7500/100 = 75/100DSC <1 !!!
@@ -277,17 +293,27 @@ contract SCEngine is ReentrancyGuard {
         // ! Good example
         // $1000 ETH / 200 SC = 5
         // 1000 * 50 = 50 000 / 100 = 500 / 200 > 1 !!!
-        // ! Basically this line just divides with 2, because we need to have more than 2x collateral than SC
-        uint256 collateralAdjustedForThreshold = (collateralValueInUSD * LIQUIDATION_THRESHOLD) / LIQUIDATION_PRECISION;
-        return collateralAdjustedForThreshold * PRECISION_18 / totalSCMinted;
+        return calculateHealthFactor(totalSCMinted, collateralValueInUSD);
     }
 
-    function _getAccountInformation(address user)
+    function _getAccountInformation(address _user)
         private
         view
         returns (uint256 totalSCMinted, uint256 collateralValueInUSD)
     {
-        totalSCMinted = s_SCMinted[user];
-        collateralValueInUSD = getAccountCollateralValueInUSD(user);
+        totalSCMinted = s_SCMinted[_user];
+        collateralValueInUSD = getAccountCollateralValueInUSD(_user);
+    }
+
+    function getAccountInformation(address _user)
+        public
+        view
+        returns (uint256 totalSCMinted, uint256 collateralValueInUSD)
+    {
+        return _getAccountInformation(_user);
+    }
+
+    function getSCMintedForAccount(address _user) public view returns (uint256) {
+        return s_SCMinted[_user];
     }
 }
