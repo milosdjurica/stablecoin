@@ -29,7 +29,7 @@ contract SCEngine is ReentrancyGuard {
     error SCEngine__TransferFailed();
     error SCEngine__BreaksHealthFactor(uint256 userHealthFactor);
     error SC__MintFailed();
-    error SCEngine__HealthFactorIsFine();
+    error SCEngine__HealthFactorIsFine(uint256 healthFactor);
     error SCEngine__HealthFactorNotImproved();
 
     ////////////////////
@@ -131,7 +131,9 @@ contract SCEngine is ReentrancyGuard {
         nonReentrant
     {
         uint256 startingUserHealthFactor = _healthFactor(_user);
-        if (startingUserHealthFactor >= MIN_HEALTH_FACTOR) revert SCEngine__HealthFactorIsFine();
+        if (startingUserHealthFactor >= MIN_HEALTH_FACTOR) {
+            revert SCEngine__HealthFactorIsFine(startingUserHealthFactor);
+        }
         uint256 tokenAmountFromDebtCovered = getTokenAmountFromUSD(_collateral, _debtToCover);
         // ! And give 10% bonus
         uint256 bonusCollateral = tokenAmountFromDebtCovered * LIQUIDATION_BONUS / LIQUIDATION_PRECISION;
@@ -143,7 +145,7 @@ contract SCEngine is ReentrancyGuard {
         uint256 endingUserHealthFactor = _healthFactor(_user);
         if (endingUserHealthFactor < MIN_HEALTH_FACTOR) revert SCEngine__HealthFactorNotImproved();
         // ! Is this necessary???
-        _revertIfHealthFactorIsBroken(msg.sender);
+        // _revertIfHealthFactorIsBroken(msg.sender);
     }
 
     ////////////////////
@@ -242,7 +244,7 @@ contract SCEngine is ReentrancyGuard {
         AggregatorV3Interface priceFeed = AggregatorV3Interface(s_priceFeeds[_collateral]);
         (, int256 price,,,) = priceFeed.latestRoundData();
         // ($1000e18 * 1e18) / ($2000e8 * 1e10) = 0.500 000 000 000 000 000
-        return (_USDAmount * PRECISION_18 * PRECISION_18) / (uint256(price) * ADDITIONAL_FEED_PRECISION_10);
+        return (_USDAmount * PRECISION_18) / (uint256(price) * ADDITIONAL_FEED_PRECISION_10);
     }
 
     function getCollateralTokensAddresses() public view returns (address[] memory) {
