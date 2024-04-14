@@ -218,6 +218,7 @@ contract SCEngine is ReentrancyGuard {
     function _burnSC(uint256 _amountToBurn, address _ownerOfSC, address _whoIsBurning) private {
         s_SCMinted[_ownerOfSC] -= _amountToBurn;
         emit StableCoinBurned(_amountToBurn, _ownerOfSC, _whoIsBurning);
+        // TODO check if this is ok
         bool success = i_sc.transferFrom(_whoIsBurning, address(this), _amountToBurn);
         if (!success) revert SCEngine__TransferFailed();
         i_sc.burn(_amountToBurn);

@@ -629,17 +629,12 @@ const isDevelopmentChain = developmentChains.includes(network.name);
 						MINT_PLAYER,
 					);
 					// ! Change price
-					console.log(await ethPriceFeedMock.latestRoundData());
 					await ethPriceFeedMock.updateAnswer(NEW_PRICE);
-					console.log(await ethPriceFeedMock.latestRoundData());
-					// !
 					await stableCoin.approve(engine, MINT_PLAYER);
-					await expect(
-						engine.liquidate(ethErc20Mock, player1, 1),
-					).to.be.revertedWithCustomError(
-						engine,
-						"SCEngine__HealthFactorNotImproved",
-					);
+					await engine.liquidate(ethErc20Mock, player1, MINT_PLAYER);
+					const info = await engine.getAccountInformation(player1);
+					console.log("player", info);
+					assert.equal(info[0], BigInt(0));
 				});
 			});
 		});
