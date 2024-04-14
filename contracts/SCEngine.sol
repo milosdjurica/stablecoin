@@ -39,8 +39,8 @@ contract SCEngine is ReentrancyGuard {
     ////////////////////
     // * Variables	  //
     ////////////////////
-    uint256 private constant ADDITIONAL_FEED_PRECISION_10 = 10e10;
-    uint256 private constant PRECISION_18 = 10e18;
+    uint256 private constant ADDITIONAL_FEED_PRECISION_10 = 1e10;
+    uint256 private constant PRECISION_18 = 1e18;
     uint256 private constant LIQUIDATION_THRESHOLD = 50;
     uint256 private constant LIQUIDATION_PRECISION = 100;
     uint256 private constant LIQUIDATION_BONUS = 10; // ! 10% bonus
@@ -218,13 +218,11 @@ contract SCEngine is ReentrancyGuard {
     ////////////////////
     // * View & Pure  //
     ////////////////////
-    function getHealthFactor() external view {}
-
-    function getTokenAmountFromUSD(address _collateral, uint256 _USDAmountInWei) public view returns (uint256) {
+    function getTokenAmountFromUSD(address _collateral, uint256 _USDAmount) public view returns (uint256) {
         AggregatorV3Interface priceFeed = AggregatorV3Interface(s_priceFeeds[_collateral]);
         (, int256 price,,,) = priceFeed.latestRoundData();
         // ($1000e18 * 1e18) / ($2000e8 * 1e10) = 0.500 000 000 000 000 000
-        return (_USDAmountInWei * PRECISION_18) / (uint256(price) * ADDITIONAL_FEED_PRECISION_10);
+        return (_USDAmount * PRECISION_18 * PRECISION_18) / (uint256(price) * ADDITIONAL_FEED_PRECISION_10);
     }
 
     function getCollateralTokensAddresses() public view returns (address[] memory) {

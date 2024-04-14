@@ -178,6 +178,9 @@ const isDevelopmentChain = developmentChains.includes(network.name);
 				});
 			});
 
+			// TODO ORDER TESTS IN THIS ORDER
+			// ! External, public, internal, private, view & pure
+
 			describe("getUSDValue Tests", () => {
 				it("ETH_ERC20Mock test", async () => {
 					const AMOUNT = 10;
@@ -281,6 +284,22 @@ const isDevelopmentChain = developmentChains.includes(network.name);
 					const ONE_ETHER_IN_USD =
 						(ONE_ETHER * BigInt(ETH_USD_PRICE)) / BigInt(PRECISION_8);
 					assert.equal(ONE_ETHER_IN_USD, accCollateralValueInUSD);
+				});
+			});
+
+			describe("getTokenAmountFromUSD", () => {
+				// ! Why it doesn't work???
+				it("calculates amount of tokens for USD", async () => {
+					// ! Should pass 6000e18
+					const AMOUNT_USD = 100;
+					const expectedAmount =
+						(AMOUNT_USD * 1e18 * PRECISION_8) / ETH_USD_PRICE;
+					const realAmount = await engine.getTokenAmountFromUSD(
+						await ethErc20Mock.getAddress(),
+						AMOUNT_USD,
+					);
+					console.log(expectedAmount, realAmount);
+					assert.equal(expectedAmount, parseFloat(realAmount.toString()));
 				});
 			});
 		});
