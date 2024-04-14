@@ -2,6 +2,7 @@ import { Address, DeployFunction } from "hardhat-deploy/types";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { developmentChains, networkConfig } from "../utils/helper.config";
 import { StableCoin } from "../typechain-types";
+import { verify } from "../utils/verify";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 	const { getNamedAccounts, ethers, deployments, network } = hre;
@@ -52,6 +53,12 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
 	// TODO Does this work and why shows different in tests???
 	stableCoin.transferOwnership(scEngine.address);
+
+	if (!IS_DEV_CHAIN && process.env.ETHERSCAN_API_KEY) {
+		log("Verifying contract....");
+		await verify(stableCoinDeploy.address, []);
+		await verify(scEngine.address, ENGINE_CONSTRUCTOR_ARGS);
+	}
 };
 export default func;
 func.id = "01_deploy"; // id required to prevent re-execution
