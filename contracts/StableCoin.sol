@@ -17,7 +17,7 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
  * Minting: Algorithmic
  * Relative Stability: Pegged to USD
  *
- * ERC20 Implementation of my stablecoin. This contract is meant to be governed by CSCEngine
+ * ERC20 Implementation of my stablecoin. This contract is meant to be governed by SCEngine
  */
 contract StableCoin is ERC20Burnable, Ownable {
     error StableCoin__MustBeMoreThanZero();

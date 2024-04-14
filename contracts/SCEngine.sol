@@ -15,6 +15,15 @@ import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/shared/interf
  * @title SCEngine
  * @author Milos Djurica
  * @notice
+ * Minimal system for stablecoin designed to be -> 1SC = $1
+ * Using Chainlink price feeds -> decentralized oracle to keep stable coin at $1 all the time
+ * Collateralized with wETH and wBTC
+ * Algorithmically stable
+ *
+ * Inspired by DAI stable coin
+ * At all the time, user should have at least 2x more value in collateral than in StableCoins, otherwise he could get liquidated !
+ * This contract handles all logis for minting and burning SC, as well as depositing and withdrawing collateral.
+ *
  *
  * ! Add description!!!
  */
@@ -116,6 +125,12 @@ contract SCEngine is ReentrancyGuard {
         mintSC(_amountSCToMint);
     }
 
+    /**
+     *
+     * @param _tokenCollateralAddress Address of ERC20 Token for collateral
+     * @param _amountCollateral Amount of collateral to redeem
+     * @param _amountSCToBurn Amount of StableCoin to burn
+     */
     function burnSCAndRedeemCollateral(
         address _tokenCollateralAddress,
         uint256 _amountCollateral,
@@ -125,6 +140,12 @@ contract SCEngine is ReentrancyGuard {
         redeemCollateral(_tokenCollateralAddress, _amountCollateral);
     }
 
+    /**
+     *
+     * @param _collateral Address of ERC20 Token for collateral
+     * @param _user Address of user to liquidate
+     * @param _debtToCover Amount of SC to cover
+     */
     function liquidate(address _collateral, address _user, uint256 _debtToCover)
         external
         moreThanZero(_debtToCover)
@@ -232,7 +253,7 @@ contract SCEngine is ReentrancyGuard {
         pure
         returns (uint256)
     {
-        // [ 4000n, 4000000000000000000000n ]
+        //  4000, 4000000000000000000000n
         if (_totalSCMinted == 0) return type(uint256).max;
         // ! Basically this line just divides with 2, because we need to have more than 2x collateral than SC
         uint256 collateralAdjustedForThreshold = (_collateralValueInUSD * LIQUIDATION_THRESHOLD) / LIQUIDATION_PRECISION;
