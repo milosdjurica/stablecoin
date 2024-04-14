@@ -605,20 +605,19 @@ const isDevelopmentChain = developmentChains.includes(network.name);
 					);
 				});
 
-				it("liquidates successfully", async () => {
+				it("liquidates successfully and burns tokens from target", async () => {
 					// ! deployer and player to deposit and mint SC
 					// ! change price
 					// ! Liquidate one
-					const TEN_ETH = ethers.parseEther("10");
-					const MINT_PLAYER = 10000;
-					const NEW_PRICE = 1000e8;
+					const MINT_PLAYER = 1000;
+					const NEW_PRICE = 500e8;
 					// ! Deposit and mint for player
 					await ethErc20Mock.mint(player1, MINT_AMOUNT);
-					await ethErc20Mock.connect(player1).approve(engine, TEN_ETH);
+					await ethErc20Mock.connect(player1).approve(engine, ONE_ETHER);
 					await stableCoin.connect(player1).approve(engine, MINT_PLAYER);
 					await engine
 						.connect(player1)
-						.depositCollateralAndMintSC(ethErc20Mock, TEN_ETH, MINT_PLAYER);
+						.depositCollateralAndMintSC(ethErc20Mock, ONE_ETHER, MINT_PLAYER);
 
 					// ! Deposit and mint for deployer
 					await ethErc20Mock.mint(deployer, MINT_AMOUNT);
@@ -629,11 +628,23 @@ const isDevelopmentChain = developmentChains.includes(network.name);
 						MINT_PLAYER,
 					);
 					// ! Change price
+
+					let info = await engine.getAccountInformation(player1);
+					let info1 = await engine.getAccountInformation(deployer);
+					console.log(
+						"BEFORE PRICING UPDATE , AFTER DEPOSITING AND MINTING ON BOTH",
+					);
+					console.log("player", info);
+					console.log("deployer", info1);
 					await ethPriceFeedMock.updateAnswer(NEW_PRICE);
 					await stableCoin.approve(engine, MINT_PLAYER);
 					await engine.liquidate(ethErc20Mock, player1, MINT_PLAYER);
-					const info = await engine.getAccountInformation(player1);
+					await ethPriceFeedMock.updateAnswer(4000e8);
+					info = await engine.getAccountInformation(player1);
+					info1 = await engine.getAccountInformation(deployer);
+					console.log("after liquidating");
 					console.log("player", info);
+					console.log("deployer", info1);
 					assert.equal(info[0], BigInt(0));
 				});
 			});
