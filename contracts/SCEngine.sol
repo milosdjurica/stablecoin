@@ -60,6 +60,7 @@ contract SCEngine is ReentrancyGuard {
         address indexed redeemedFrom, address indexed redeemedTo, address indexed tokenAddress, uint256 amount
     );
     event StableCoinMinted(address indexed user, uint256 indexed amount);
+    event StableCoinBurned(uint256 indexed amount, address indexed ownerOfSC, address indexed whoBurned);
 
     ////////////////////
     // * Modifiers 	  //
@@ -179,6 +180,7 @@ contract SCEngine is ReentrancyGuard {
     }
 
     function burnSC(uint256 _amountToBurn) public moreThanZero(_amountToBurn) {
+        // TODO should i check if has enough tokens to burn or solidity takes care of that on its own
         _burnSC(_amountToBurn, msg.sender, msg.sender);
         // ! Probably dont really need this line
         _revertIfHealthFactorIsBroken(msg.sender);
@@ -213,6 +215,7 @@ contract SCEngine is ReentrancyGuard {
 
     function _burnSC(uint256 _amountToBurn, address _ownerOfSC, address _whoIsBurning) private {
         s_SCMinted[_ownerOfSC] -= _amountToBurn;
+        emit StableCoinBurned(_amountToBurn, _ownerOfSC, _whoIsBurning);
         bool success = i_sc.transferFrom(_whoIsBurning, address(this), _amountToBurn);
         if (!success) revert SCEngine__TransferFailed();
         i_sc.burn(_amountToBurn);

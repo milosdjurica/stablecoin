@@ -362,17 +362,104 @@ const isDevelopmentChain = developmentChains.includes(network.name);
 				});
 			});
 
-			// describe("depositCollateralAndMintSC", () => {
-			// 	it("", async () => {
-			// 		ethErc20Mock.mint(deployer, MINT_AMOUNT);
-			// 		await ethErc20Mock.approve(engine, ONE_ETHER);
-			// 		await engine.depositCollateralAndMintSC(
-			// 			ethErc20Mock,
-			// 			ONE_ETHER,
-			// 			2000,
-			// 		);
-			// 		const userInfo = await engine.getAccountInformation(deployer);
-			// 		console.log(userInfo);
-			// 	});
-			// });
+			describe("depositCollateralAndMintSC", () => {
+				it("Successfully deposits collateral and mints SC", async () => {
+					const THOUSAND = BigInt(1000);
+					ethErc20Mock.mint(deployer, MINT_AMOUNT);
+					await ethErc20Mock.approve(engine, ONE_ETHER);
+					await engine.depositCollateralAndMintSC(
+						ethErc20Mock,
+						ONE_ETHER,
+						THOUSAND,
+					);
+					const userInfo = await engine.getAccountInformation(deployer);
+					assert.equal(userInfo[0], THOUSAND);
+					assert.equal(
+						userInfo[1],
+						(ONE_ETHER * BigInt(ETH_USD_PRICE)) / BigInt(PRECISION_8),
+					);
+				});
+			});
+
+			describe("burnSC tests", () => {
+				it("should revert if amount is 0", async () => {
+					await expect(engine.burnSC(0)).to.be.revertedWithCustomError(
+						engine,
+						"SCEngine__NeedsMoreThanZero",
+					);
+				});
+
+				it("should revert if burning more than he has", async () => {
+					await expect(engine.burnSC(10)).to.be.revertedWithPanic(0x11);
+				});
+
+				it("revert when doesn't have allowance", async () => {
+					await ethErc20Mock.mint(deployer, MINT_AMOUNT);
+					await ethErc20Mock.approve(engine, ONE_ETHER);
+					const ONE_HUNDRED = 100;
+					await engine.depositCollateralAndMintSC(
+						ethErc20Mock,
+						ONE_ETHER,
+						ONE_HUNDRED,
+					);
+					await expect(engine.burnSC(ONE_HUNDRED))
+						.to.be.revertedWithCustomError(
+							stableCoin,
+							"ERC20InsufficientAllowance",
+						)
+						.withArgs(await engine.getAddress(), 0, ONE_HUNDRED);
+				});
+
+				it("revert when doesn't have enough allowance", async () => {
+					await ethErc20Mock.mint(deployer, MINT_AMOUNT);
+					await ethErc20Mock.approve(engine, ONE_ETHER);
+					const ONE_HUNDRED = 100;
+					const ALLOWANCE_AMOUNT = 50;
+					await engine.depositCollateralAndMintSC(
+						ethErc20Mock,
+						ONE_ETHER,
+						ONE_HUNDRED,
+					);
+					await stableCoin.approve(engine, ALLOWANCE_AMOUNT);
+					await expect(engine.burnSC(ONE_HUNDRED))
+						.to.be.revertedWithCustomError(
+							stableCoin,
+							"ERC20InsufficientAllowance",
+						)
+						.withArgs(await engine.getAddress(), ALLOWANCE_AMOUNT, ONE_HUNDRED);
+				});
+
+				it("burns successfully and updates s_SCMinted", async () => {
+					await ethErc20Mock.mint(deployer, MINT_AMOUNT);
+					await ethErc20Mock.approve(engine, ONE_ETHER);
+					const ONE_HUNDRED = 100;
+					const BURN_AMOUNT = 10;
+					await engine.depositCollateralAndMintSC(
+						ethErc20Mock,
+						ONE_ETHER,
+						ONE_HUNDRED,
+					);
+					await stableCoin.approve(engine, ONE_HUNDRED);
+					await engine.burnSC(BURN_AMOUNT);
+					await assert.equal(
+						await engine.getSCMintedForAccount(deployer),
+						BigInt(ONE_HUNDRED - BURN_AMOUNT),
+					);
+				});
+
+				it("burns successfully and emits event", async () => {
+					await ethErc20Mock.mint(deployer, MINT_AMOUNT);
+					await ethErc20Mock.approve(engine, ONE_ETHER);
+					const ONE_HUNDRED = 100;
+					await engine.depositCollateralAndMintSC(
+						ethErc20Mock,
+						ONE_ETHER,
+						ONE_HUNDRED,
+					);
+					await stableCoin.approve(engine, ONE_HUNDRED);
+					await expect(engine.burnSC(ONE_HUNDRED))
+						.to.emit(engine, "StableCoinBurned")
+						.withArgs(ONE_HUNDRED, deployer.address, deployer.address);
+				});
+			});
 		});
